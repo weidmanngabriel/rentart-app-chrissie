@@ -1,0 +1,7 @@
+@import url('../styles.css');
+
+button{font-family:inherit}
+.main-nav button{background:none;border:0;padding:5px 0;font-size:12px;cursor:pointer}
+.main-nav button:hover{color:var(--orange)}
+.main-nav.is-open{display:flex}
+@media(max-width:760px){.main-nav.is-open{position:absolute;top:72px;left:0;right:0;display:flex;flex-direction:column;gap:0;padding:16px 7vw;background:var(--paper);border-bottom:1px solid var(--line);margin:0}.main-nav.is-open button{text-align:left;padding:12px 0}.main-nav.is-open + .desktop-cta{display:none}}
