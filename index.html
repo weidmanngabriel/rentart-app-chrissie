@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="RentArt — Kunst, die bleibt. Finde besondere Werke für deine Räume." />
+    <title>RentArt — Kunst, die bleibt</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="RentArt Startseite">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>rent<span>art</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <a href="#entdecken">Entdecken</a>
+        <a href="#so-funktionierts">So funktioniert's</a>
+        <a href="#story">Unsere Idee</a>
+      </nav>
+      <button class="button button-small button-outline" data-scroll="#entdecken">Kunst finden <span>↗</span></button>
+      <button class="menu-toggle" aria-label="Menü öffnen" aria-expanded="false">☰</button>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-dot"></span> Kunst neu gedacht</p>
+          <h1>Räume, die<br /><em>etwas erzählen.</em></h1>
+          <p class="hero-text">Entdecke Kunst, die zu dir passt. Miete besondere Werke von lokalen Künstlern — flexibel, fair und ohne Risiko.</p>
+          <div class="hero-actions">
+            <button class="button button-primary" data-scroll="#entdecken">Kollektion entdecken <span>↗</span></button>
+            <button class="text-link" data-scroll="#so-funktionierts">Wie funktioniert's? <span>→</span></button>
+          </div>
+          <div class="hero-proof">
+            <div class="avatar-stack" aria-hidden="true"><span>J</span><span>M</span><span>L</span><span>+</span></div>
+            <p><strong>240+</strong> Menschen haben<br />ihre Wände neu entdeckt.</p>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="Abstrakte Kunstcollage">
+          <div class="art-shadow"></div>
+          <div class="art-card art-card-main">
+            <div class="art-shape art-circle"></div>
+            <div class="art-shape art-arch"></div>
+            <div class="art-shape art-line"></div>
+            <span class="art-signature">No. 014 / 2024</span>
+          </div>
+          <div class="art-card art-card-side">
+            <div class="side-sun"></div>
+            <div class="side-horizon"></div>
+            <div class="side-mountain"></div>
+          </div>
+          <div class="art-label">curated<br /><strong>locally</strong></div>
+          <span class="floating-note">Kunst für<br /><em>dein Jetzt</em> ↗</span>
+        </div>
+      </section>
+
+      <section class="marquee" aria-label="RentArt Werte">
+        <div class="marquee-track"><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span><b>✳</b><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span></div>
+      </section>
+
+      <section class="discover section-wrap" id="entdecken">
+        <div class="section-heading">
+          <div><p class="eyebrow">Deine nächste Wand</p><h2>Etwas Schönes<br /><em>wartet auf dich.</em></h2></div>
+          <p class="section-intro">Eine kuratierte Auswahl von Künstlern aus deiner Nähe. Wechsel, was dich bewegt.</p>
+        </div>
+        <div class="filter-row" role="group" aria-label="Kollektion filtern">
+          <button class="filter active" data-filter="all">Alle Werke</button>
+          <button class="filter" data-filter="abstrakt">Abstrakt</button>
+          <button class="filter" data-filter="fotografie">Fotografie</button>
+          <button class="filter" data-filter="grafik">Grafik</button>
+        </div>
+        <div class="art-grid">
+          <article class="work-card" data-category="abstrakt"><div class="work-image work-one"><span>01</span></div><div class="work-meta"><div><h3>Soft Geometry</h3><p>Mara Klein · Berlin</p></div><strong>ab 29 €<small>/ Monat</small></strong></div></article>
+          <article class="work-card" data-category="fotografie"><div class="work-image work-two"><span>02</span></div><div class="work-meta"><div><h3>Sunday Light</h3><p>Jonas Weber · Köln</p></div><strong>ab 35 €<small>/ Monat</small></strong></div></article>
+          <article class="work-card" data-category="grafik"><div class="work-image work-three"><span>03</span></div><div class="work-meta"><div><h3>In Between</h3><p>Lena Park · Hamburg</p></div><strong>ab 25 €<small>/ Monat</small></strong></div></article>
+        </div>
+        <button class="button button-dark centered" data-scroll="#story">Mehr Werke entdecken <span>↗</span></button>
+      </section>
+
+      <section class="how section-wrap" id="so-funktionierts">
+        <div class="how-visual"><div class="how-number">01</div><div class="how-poster"><span>MAKE<br /><em>SPACE</em><br />FOR ART</span><small>RENTART / 001</small></div><div class="scribble">easy does it <span>↗</span></div></div>
+        <div class="how-copy"><p class="eyebrow">So einfach geht's</p><h2>Kunst darf sich<br /><em>leicht anfühlen.</em></h2><div class="steps"><div class="step"><b>01</b><div><h3>Finde dein Werk</h3><p>Stöbere durch unsere Auswahl und lass dich inspirieren.</p></div></div><div class="step"><b>02</b><div><h3>Miete deine Kunst</h3><p>Flexibel ab einem Monat. Lieferung und Aufhängung inklusive.</p></div></div><div class="step"><b>03</b><div><h3>Wechsel, wenn du willst</h3><p>Dein Geschmack verändert sich? Deine Kunst darf das auch.</p></div></div></div></div>
+      </section>
+
+      <section class="story section-wrap" id="story"><p class="eyebrow">Warum RentArt?</p><h2>Mehr als ein Bild.<br /><em>Ein Gefühl für Räume.</em></h2><p class="story-text">Wir glauben, dass Kunst nicht hinter Glas warten sollte. Sie soll bei dir sein — im Alltag, im Wandel, genau dort, wo Leben passiert.</p><a class="text-link" href="mailto:hallo@rentart.de">Lern uns kennen <span>→</span></a></section>
+    </main>
+
+    <footer class="site-footer"><a class="brand" href="#"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>rent<span>art</span></span></a><p>© 2024 RentArt. Kunst für dein Jetzt.</p><div><a href="#">Instagram</a><a href="mailto:hallo@rentart.de">Kontakt</a></div></footer>
+    <script src="script.js"></script>
+  </body>
+</html>
