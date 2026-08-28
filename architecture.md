@@ -1,7 +1,7 @@
 # Architektur
 
-RentArt ist als kleine, clientseitige React-Anwendung mit TypeScript und Vite aufgebaut. Die Oberfläche liegt in `src/App.tsx`, globale Gestaltung in `src/styles.css`. Der aktuelle Stand enthält bewusst nur UI-Grundlagen und lokale Demo-Daten.
+RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der Einstieg liegt in `src/main.tsx`, die Oberfläche in `src/App.tsx`; globale Gestaltung liegt in `styles.css`.
 
-Die PWA-Funktion wird über `vite-plugin-pwa` erzeugt. GitHub Actions baut den Vite-Output bei jedem Push auf `main` und veröffentlicht ihn über GitHub Pages.
+`app.html` ist der Vite-Entwicklungseinstieg. GitHub Actions baut daraus statische Dateien und legt sie zusätzlich als `index.html` und Browser-Assets auf `main` ab. Dadurch funktioniert die bestehende GitHub-Pages-Einstellung „Deploy from branch“, ohne dass der Browser TypeScript-Quelldateien laden muss.
 
-Für spätere Produktfunktionen bleiben Google Sheets und Google Drive die externen Speicher. Google-Anmeldung sowie API-Zugriff werden erst ergänzt, wenn die erste Fachfunktion definiert ist. Es werden keine Secrets im Frontend gespeichert.
+`vite-plugin-pwa` erzeugt Manifest und Service Worker. Die App benötigt kein Backend. Spätere persistente Daten werden direkt über Google Sheets gelesen und geschrieben, Dateien über Google Drive verwaltet. Google OAuth wird als Browser-Flow ergänzt; Client-ID und Ressourcen-IDs werden erst bei der externen Google-Konfiguration festgelegt. Private Secrets dürfen nicht im Client oder Repository liegen.
