@@ -4,11 +4,19 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/rentart-app-chrissie/',
+  build: {
+    rollupOptions: {
+      input: 'app.html'
+    }
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
+      workbox: {
+        mode: 'development'
+      },
       manifest: {
         name: 'RentArt',
         short_name: 'RentArt',
