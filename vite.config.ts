@@ -1,4 +1,3 @@
-import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -7,7 +6,7 @@ export default defineConfig({
   base: '/rentart-app-chrissie/',
   build: {
     rollupOptions: {
-      input: resolve(__dirname, 'app.html')
+      input: 'app.html'
     }
   },
   plugins: [
@@ -15,6 +14,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
+      workbox: {
+        mode: 'development'
+      },
       manifest: {
         name: 'RentArt',
         short_name: 'RentArt',
