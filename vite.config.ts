@@ -1,9 +1,15 @@
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/rentart-app-chrissie/',
+  build: {
+    rollupOptions: {
+      input: resolve(__dirname, 'app.html')
+    }
+  },
   plugins: [
     react(),
     VitePWA({
