@@ -49,9 +49,9 @@ Alles, was im Frontend enthalten ist, muss als öffentlich einsehbar betrachtet 
 
 Verwende für Google ausschließlich Mechanismen, die für öffentliche Browser-Anwendungen vorgesehen sind.
 
-## Hosting
+## Hosting & Sicherheit
 
-Die Anwendung wird über GitHub Pages bereitgestellt.
+Die Anwendung wird über GitHub Pages bereitgestellt. Das bedeutet, dass der Code in diesem Repo öffentlich einsehbar ist. Speichere also nie Credentials oder sowas im Projekt, sondern verwende immer sichere Verfahren.
 
 Richte eine geeignete GitHub-Actions-Pipeline ein, sodass Änderungen am vorgesehenen Branch automatisch gebaut und veröffentlicht werden.
 
