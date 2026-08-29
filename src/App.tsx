@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { GOOGLE_SESSION_KEY, readGoogleCredential, type GoogleUser } from './auth/google'
 
 type Category = 'Alle Werke' | 'Abstrakt' | 'Fotografie' | 'Grafik'
 
@@ -12,40 +13,13 @@ type Artwork = {
   visualClass: string
 }
 
-type GoogleUser = {
-  sub: string
-  name: string
-  email: string
-  picture?: string
-  exp: number
-}
-
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
-const SESSION_KEY = 'rentart-google-session'
 
 const artworks: Artwork[] = [
   { number: '01', title: 'Soft Geometry', artist: 'Mara Klein', city: 'Berlin', price: '29 €', category: 'Abstrakt', visualClass: 'work-one' },
   { number: '02', title: 'Sunday Light', artist: 'Jonas Weber', city: 'Köln', price: '35 €', category: 'Fotografie', visualClass: 'work-two' },
   { number: '03', title: 'In Between', artist: 'Lena Park', city: 'Hamburg', price: '25 €', category: 'Grafik', visualClass: 'work-three' },
 ]
-
-function readCredential(credential: string): GoogleUser | null {
-  try {
-    const payload = credential.split('.')[1]
-    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
-    const decoded = decodeURIComponent(
-      atob(normalized)
-        .split('')
-        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
-        .join(''),
-    )
-    const user = JSON.parse(decoded) as GoogleUser
-    if (!user.sub || !user.email || !user.name || !user.exp || user.exp * 1000 <= Date.now()) return null
-    return user
-  } catch {
-    return null
-  }
-}
 
 function Brand() {
   return <a className="brand" href="#top" aria-label="RentArt Startseite"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span><span>rent<span>art</span></span></a>
@@ -60,11 +34,11 @@ function App() {
   const filteredArtworks = category === 'Alle Werke' ? artworks : artworks.filter((artwork) => artwork.category === category)
 
   useEffect(() => {
-    const storedCredential = sessionStorage.getItem(SESSION_KEY)
+    const storedCredential = sessionStorage.getItem(GOOGLE_SESSION_KEY)
     if (!storedCredential) return
-    const storedUser = readCredential(storedCredential)
+    const storedUser = readGoogleCredential(storedCredential)
     if (storedUser) setUser(storedUser)
-    else sessionStorage.removeItem(SESSION_KEY)
+    else sessionStorage.removeItem(GOOGLE_SESSION_KEY)
   }, [])
 
   useEffect(() => {
@@ -78,9 +52,9 @@ function App() {
         auto_select: false,
         cancel_on_tap_outside: true,
         callback: ({ credential }) => {
-          const nextUser = readCredential(credential)
+          const nextUser = readGoogleCredential(credential)
           if (!nextUser) return
-          sessionStorage.setItem(SESSION_KEY, credential)
+          sessionStorage.setItem(GOOGLE_SESSION_KEY, credential)
           setUser(nextUser)
         },
       })
@@ -112,7 +86,7 @@ function App() {
   }
 
   const logout = () => {
-    sessionStorage.removeItem(SESSION_KEY)
+    sessionStorage.removeItem(GOOGLE_SESSION_KEY)
     window.google?.accounts.id.disableAutoSelect()
     setUser(null)
     setGoogleReady(false)
