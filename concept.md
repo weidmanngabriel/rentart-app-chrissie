@@ -20,6 +20,12 @@ Ein noch gültiger API-Zugriff wird zusammen mit seiner Ablaufzeit lokal auf dem
 
 Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund öffentlich sichtbar. Im Galerie-Bereich wird nur ein Login-Hinweis angezeigt.
 
+## Projektdokumente in der App
+
+Über den Menüpunkt `Dokumente` ist eine eigene Unterseite erreichbar, auf der die zentralen Projektdokumente direkt in RentArt gelesen werden können. Dazu gehören `concept.md`, `architecture.md`, `agents.md` sowie die vorhandenen Dokumente unter `docs/use-cases/`.
+
+Die Dokumentenseite ist öffentlich erreichbar und benötigt weder Google-Login noch Google-Datenfreigabe. Sie dient vor allem dazu, Konzept, Architektur und Abläufe beim Testen der PWA schnell auf dem aktuellen Gerät einsehen zu können. Angezeigt wird immer der Dokumentationsstand, der beim jeweiligen App-Build im Repository vorhanden war.
+
 ## Pull-to-Refresh in der installierten App
 
 Die installierte PWA unterstützt auf Touch-Geräten ein eigenes Pull-to-Refresh. Befindet sich die Seite ganz oben, kann sie nach unten gezogen werden. Ein sichtbarer Hinweis zeigt an, wann weit genug gezogen wurde. Beim Loslassen wird die komplette Seite neu geladen, sodass aktuelle App-Dateien und aktuelle Daten aus Google Sheets/Drive geladen werden. Normales Scrollen innerhalb der Seite wird dadurch nicht verändert.

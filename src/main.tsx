@@ -6,6 +6,7 @@ import PullToRefresh from './PullToRefresh'
 import './styles.css'
 import './auth.css'
 import './gallery.css'
+import './docs.css'
 
 registerSW({ immediate: true })
 

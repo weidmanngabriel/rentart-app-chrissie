@@ -1,12 +1,18 @@
 # Architektur
 
-RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der Einstieg liegt in `src/main.tsx`, die Oberfläche in `src/App.tsx`; globale Gestaltung liegt in `styles.css`, ergänzende Styles für die Google-Anmeldung in `src/auth.css` und für die datenbasierte Galerie in `src/gallery.css`.
+RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der Einstieg liegt in `src/main.tsx`, die Oberfläche in `src/App.tsx`; globale Gestaltung liegt in `styles.css`, ergänzende Styles für die Google-Anmeldung in `src/auth.css`, für die datenbasierte Galerie in `src/gallery.css` und für die Projektdokumente in `src/docs.css`.
 
 `index.html` ist der einzige Vite-Einstieg für Entwicklung und Produktionsbuild. Vite erzeugt daraus ausschließlich im Verzeichnis `dist` die statischen Dateien für GitHub Pages. Die GitHub-Action baut und veröffentlicht `dist` bei Änderungen auf `main`; erzeugte Dateien gehören nicht ins Repository.
 
 `vite-plugin-pwa` erzeugt Manifest und Service Worker bei jedem Produktionsbuild. Die App benötigt kein eigenes Backend. Für installierte Apps werden versionierte PNG-Icons in 192×192 und 512×512 Pixeln im Manifest verwendet. `index.html` verweist zusätzlich explizit auf ein 180×180 `apple-touch-icon`, damit iOS beim Hinzufügen zum Home-Bildschirm nicht auf ein generisches Ersatzsymbol zurückfällt. Neue Icon-Dateinamen dürfen bei Icon-Änderungen bewusst verwendet werden, um besonders hartnäckige Home-Screen-Caches von iOS zu umgehen.
 
 `src/PullToRefresh.tsx` umschließt die Anwendung direkt in `src/main.tsx` und ergänzt für Touch-Geräte ein eigenes Pull-to-Refresh. Die Geste wird nur gestartet, wenn `window.scrollY === 0`. Vertikales Herunterziehen wird gedämpft visualisiert; horizontale Gesten und normales Scrollen werden nicht übernommen. Nach Überschreiten des Schwellwerts löst das Loslassen einen vollständigen `window.location.reload()` aus. Dadurch werden sowohl der aktuelle PWA-Stand als auch anschließend die Google-Daten neu geladen. Login-Profile und noch gültige Google-API-Tokens bleiben dabei durch die lokale Persistenz erhalten.
+
+## Navigation und Projektdokumente
+
+`src/App.tsx` unterscheidet über den URL-Hash zwischen der normalen Startansicht und der Unterseite `#dokumente`. Damit bleibt die Anwendung ohne zusätzliche Routing-Library klein und funktioniert weiterhin vollständig als statische GitHub-Pages-App. Die normale Navigation kann aus der Dokumentenansicht zurück zu Galerie, Ablauf und Story wechseln.
+
+`src/docs/DocsPage.tsx` bündelt die zentralen Markdown-Dateien mit Vites `?raw`-Importen direkt in den Produktionsbuild. Angezeigt werden `concept.md`, `architecture.md`, `agents.md` sowie die derzeit vorhandenen Dateien unter `docs/use-cases/`. Die Dokumentenansicht benötigt deshalb zur Laufzeit weder GitHub- noch Google-Zugriff; sie zeigt den Stand des jeweiligen Builds. Die Inhalte werden bewusst als lesbarer Markdown-Quelltext dargestellt, sodass auch Mermaid-Blöcke und technische Details vollständig sichtbar bleiben.
 
 ## Deployment
 
