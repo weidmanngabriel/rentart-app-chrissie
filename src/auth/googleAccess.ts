@@ -25,7 +25,7 @@ type StoredGoogleAccess = {
 
 type StoredGoogleAccessMap = Record<string, StoredGoogleAccess>
 
-export function requestGoogleAccessToken(clientId: string) {
+export function requestGoogleAccessToken(clientId: string, loginHint?: string) {
   return new Promise<GoogleAccessToken>((resolve, reject) => {
     const oauth2 = window.google?.accounts.oauth2
     if (!oauth2) {
@@ -36,6 +36,7 @@ export function requestGoogleAccessToken(clientId: string) {
     const client = oauth2.initTokenClient({
       client_id: clientId,
       scope: GOOGLE_API_SCOPES,
+      hint: loginHint,
       callback: (response) => {
         if (response.error || !response.access_token) {
           reject(new Error(response.error_description || response.error || 'Google-Zugriff wurde nicht freigegeben.'))
@@ -57,12 +58,13 @@ function readAccessMap(): StoredGoogleAccessMap {
   try {
     const raw = sessionStorage.getItem(GOOGLE_ACCESS_SESSION_KEY)
     if (!raw) return {}
-    const value = JSON.parse(raw) as StoredGoogleAccessMap | StoredGoogleAccess
+    const value = JSON.parse(raw) as StoredGoogleAccessMap | StoredGoogleAccess | null
+    if (!value || typeof value !== 'object') return {}
     if ('accessToken' in value && 'email' in value) {
       const legacy = value as StoredGoogleAccess
       return { [legacy.email.toLowerCase()]: legacy }
     }
-    return value && typeof value === 'object' ? value as StoredGoogleAccessMap : {}
+    return value as StoredGoogleAccessMap
   } catch {
     return {}
   }
