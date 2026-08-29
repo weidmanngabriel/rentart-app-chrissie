@@ -1,5 +1,11 @@
 # Konzept
 
+## Grundidee und Geschäftsmodell
+
+RentArt ist eine Vermittlungsplattform, auf der Künstler ihre Kunstwerke zur Miete anbieten können. Dahinter steht die Annahme, dass die Vermietung eines Bildes einfacher sein kann, als einen Käufer zum vollen Kaufpreis zu finden. Interessierte Mieter können auf der Plattform passende Werke finden und die Künstler kontaktieren.
+
+Die Plattform soll den gesamten Ablauf rund um die Vermietung unterstützen: Organisation, Kommunikation und finanzielle Abwicklung sowie die notwendige Absicherung, zum Beispiel durch Versicherung. Der aktuelle Proof of Concept bildet davon zunächst nur ausgewählte Kernfunktionen ab; die Beschreibung dient als übergeordnete Richtung für die weitere Produktentwicklung.
+
 RentArt ist eine Plattform für lokale Kunst. Nutzer können Werke entdecken, für einen flexiblen Zeitraum mieten und später wechseln.
 
 Die öffentliche Einstiegsseite erklärt RentArt. Die Galerie ist ein geschützter Bereich und wird erst nach Anmeldung mit einem Google-Konto angezeigt. Es gibt keine eigene Benutzerverwaltung und keine RentArt-Passwörter.
