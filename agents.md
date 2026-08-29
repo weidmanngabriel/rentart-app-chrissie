@@ -53,7 +53,7 @@ Implementiere keine eigene Benutzerverwaltung und kein eigenes Passwortsystem.
 
 Der OAuth-Client ist ein Client vom Typ Webanwendung. Seine öffentliche Client-ID liegt als GitHub-Repository-Variable `GOOGLE_CLIENT_ID` vor und wird beim Build als `VITE_GOOGLE_CLIENT_ID` bereitgestellt. Die Client-ID ist kein Secret; ein Client-Secret darf nie verwendet oder gespeichert werden.
 
-Google Identity Services trennt Anmeldung und API-Autorisierung. Das ID-Credential identifiziert den Nutzer; für Sheets und Drive fordert der Client zusätzlich ein kurzlebiges Access Token an. Das Access Token wird nicht persistent gespeichert. Vor dem Datenzugriff wird geprüft, dass Login und API-Autorisierung dieselbe Google-E-Mail-Adresse verwenden.
+Google Identity Services trennt Anmeldung und API-Autorisierung. Das ID-Credential identifiziert den Nutzer; für Sheets und Drive fordert der Client zusätzlich ein kurzlebiges Access Token an. Das Access Token darf für die installierte PWA zusammen mit seiner Ablaufzeit lokal persistent gespeichert werden, damit ein Schließen und erneutes Öffnen der App den noch gültigen Datenzugriff nicht sofort verliert. Abgelaufene oder von Google abgelehnte Tokens müssen entfernt und erneut über eine Nutzeraktion angefordert werden. Vor dem Datenzugriff wird geprüft, dass Login und API-Autorisierung dieselbe Google-E-Mail-Adresse verwenden.
 
 Für den PoC werden die OAuth-Scopes `openid`, `email`, `profile`, `https://www.googleapis.com/auth/spreadsheets` und `https://www.googleapis.com/auth/drive` verwendet.
 
