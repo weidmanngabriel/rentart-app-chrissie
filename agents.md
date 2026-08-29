@@ -83,8 +83,11 @@ Treffe sinnvolle technische Entscheidungen selbstständig, solange sie die oben 
 
 Wenn eine konkrete Produktfunktion noch nicht definiert ist, erfinde keine umfangreiche Fachlogik. Schaffe stattdessen eine saubere Grundlage, auf der die eigentlichen Funktionen später aufgebaut werden können.
 
-Dokumentiere und Aktualisiere alle Features in einer concept.md Datei mit und alle wichtigen Code-architektonischen Entscheidungen in einer architecture.md Datei. Dokumentiere so, dass ein fähiger Agent in der Lage ist, die bestehende App von Grund auf neu zu implementieren.
-Es geht also v.a. um eine Highlevel Übersicht, nicht um jedes Detail.
+`concept.md` und `architecture.md` sind bei jeder relevanten Änderung verbindlich zu beachten. Vor einer Implementierung muss geprüft werden, ob die geplante Änderung mit dem dort dokumentierten Produktkonzept und der bestehenden Architektur übereinstimmt.
+
+Halte beide Dateien dauerhaft auf dem aktuellen Stand. Ergänze neue fachliche Funktionen in `concept.md` und wichtige technische bzw. architektonische Entscheidungen in `architecture.md`. Aktualisiere bestehende Aussagen, wenn sich Verhalten oder Aufbau ändern, und entferne Inhalte, die nicht mehr dem tatsächlichen Stand der Anwendung entsprechen.
+
+Die Dokumentation soll so gepflegt werden, dass ein fähiger Agent die bestehende App und ihre wichtigsten Produkt- und Architekturentscheidungen schnell verstehen und im Zweifel von Grund auf neu implementieren könnte. Es geht vor allem um eine belastbare Highlevel-Übersicht, nicht um jedes Detail.
 
 ## Initiales Ergebnis
 
