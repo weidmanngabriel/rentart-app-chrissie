@@ -24,7 +24,7 @@ Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund ö
 
 Über den Menüpunkt `Dokumente` ist eine eigene Unterseite erreichbar, auf der ausschließlich fachliche Projektdokumentation direkt in RentArt gelesen werden kann. Angezeigt werden `concept.md` sowie die vorhandenen Dokumente unter `docs/use-cases/`. Technische und interne Arbeitsdokumente wie `architecture.md` und `agents.md` gehören nicht in diese Ansicht.
 
-Die Markdown-Inhalte werden als formatierte Dokumente dargestellt, also unter anderem mit Überschriften, Listen, Hervorhebungen, Links und Codeblöcken. Die Dokumentenseite ist öffentlich erreichbar und benötigt weder Google-Login noch Google-Datenfreigabe. Angezeigt wird immer der Dokumentationsstand, der beim jeweiligen App-Build im Repository vorhanden war.
+Die Markdown-Inhalte werden als formatierte Dokumente dargestellt, also unter anderem mit Überschriften, Listen, Hervorhebungen, Links und Codeblöcken. Mermaid-Blöcke in den fachlichen Dokumenten werden als echte grafische Diagramme angezeigt; nur wenn das Rendering fehlschlägt, bleibt der Quelltext als Fallback sichtbar. Die Dokumentenseite ist öffentlich erreichbar und benötigt weder Google-Login noch Google-Datenfreigabe. Angezeigt wird immer der Dokumentationsstand, der beim jeweiligen App-Build im Repository vorhanden war.
 
 ## Pull-to-Refresh in der installierten App
 

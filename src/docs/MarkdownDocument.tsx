@@ -1,6 +1,97 @@
-import type { MouseEvent, ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 
 const inlinePattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g
+const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js'
+
+type MermaidApi = {
+  initialize: (config: Record<string, unknown>) => void
+  render: (id: string, source: string) => Promise<{ svg: string }>
+}
+
+declare global {
+  interface Window {
+    mermaid?: MermaidApi
+  }
+}
+
+let mermaidLoader: Promise<MermaidApi> | null = null
+
+function loadMermaid(): Promise<MermaidApi> {
+  if (window.mermaid) return Promise.resolve(window.mermaid)
+  if (mermaidLoader) return mermaidLoader
+
+  mermaidLoader = new Promise((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${MERMAID_CDN}"]`)
+    const script = existing ?? document.createElement('script')
+
+    const finish = () => {
+      if (!window.mermaid) {
+        reject(new Error('Mermaid konnte nicht geladen werden.'))
+        return
+      }
+      window.mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: 'neutral',
+      })
+      resolve(window.mermaid)
+    }
+
+    if (existing) {
+      if (window.mermaid) finish()
+      else {
+        existing.addEventListener('load', finish, { once: true })
+        existing.addEventListener('error', () => reject(new Error('Mermaid konnte nicht geladen werden.')), { once: true })
+      }
+      return
+    }
+
+    script.src = MERMAID_CDN
+    script.async = true
+    script.addEventListener('load', finish, { once: true })
+    script.addEventListener('error', () => reject(new Error('Mermaid konnte nicht geladen werden.')), { once: true })
+    document.head.appendChild(script)
+  })
+
+  return mermaidLoader
+}
+
+function MermaidDiagram({ source }: { source: string }) {
+  const reactId = useId()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const renderDiagram = async () => {
+      try {
+        setError(null)
+        const mermaid = await loadMermaid()
+        const id = `mermaid-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`
+        const { svg } = await mermaid.render(id, source)
+        if (!cancelled && containerRef.current) containerRef.current.innerHTML = svg
+      } catch (renderError) {
+        if (!cancelled) setError(renderError instanceof Error ? renderError.message : 'Diagramm konnte nicht gerendert werden.')
+      }
+    }
+
+    void renderDiagram()
+    return () => {
+      cancelled = true
+    }
+  }, [reactId, source])
+
+  if (error) {
+    return (
+      <div className="markdown-code markdown-mermaid-error">
+        <span>Diagramm konnte nicht angezeigt werden</span>
+        <pre><code>{source}</code></pre>
+      </div>
+    )
+  }
+
+  return <div className="markdown-mermaid" ref={containerRef} aria-label="Mermaid-Diagramm" />
+}
 
 type LinkHandler = (href: string) => void
 
@@ -69,12 +160,17 @@ function MarkdownDocument({ source, onDocumentLink }: MarkdownDocumentProps) {
         index += 1
       }
       if (index < lines.length) index += 1
-      blocks.push(
-        <div className="markdown-code" key={key++}>
-          {language && <span>{language === 'mermaid' ? 'Diagramm · Mermaid' : language}</span>}
-          <pre><code>{codeLines.join('\n')}</code></pre>
-        </div>,
-      )
+      const code = codeLines.join('\n')
+      if (language.toLowerCase() === 'mermaid') {
+        blocks.push(<MermaidDiagram key={key++} source={code} />)
+      } else {
+        blocks.push(
+          <div className="markdown-code" key={key++}>
+            {language && <span>{language}</span>}
+            <pre><code>{code}</code></pre>
+          </div>,
+        )
+      }
       continue
     }
 
