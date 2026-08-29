@@ -36,7 +36,7 @@ export function requestGoogleAccessToken(clientId: string, loginHint?: string) {
     const client = oauth2.initTokenClient({
       client_id: clientId,
       scope: GOOGLE_API_SCOPES,
-      hint: loginHint,
+      login_hint: loginHint,
       callback: (response) => {
         if (response.error || !response.access_token) {
           reject(new Error(response.error_description || response.error || 'Google-Zugriff wurde nicht freigegeben.'))
