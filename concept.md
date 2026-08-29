@@ -6,7 +6,7 @@ Die öffentliche Einstiegsseite erklärt RentArt. Die Galerie ist ein geschützt
 
 Die Google-Anmeldung ist jederzeit im Header erreichbar. Ohne Anmeldung zeigt der Header den Google-Anmeldebutton. Nach der Anmeldung erscheint dort das Google-Profil als Konto-Button; ein Klick darauf öffnet ein kleines Kontomenü mit Name, E-Mail-Adresse und einer klar sichtbaren Abmeldeaktion.
 
-Nach der Anmeldung wird für den Zugriff auf das Google-Backend zusätzlich ein kurzlebiger Google-API-Zugriff angefordert. Dabei muss derselbe Google-Account gewählt werden. Erst danach werden Rollen, Werke und Reservierungen aus dem Google Sheet geladen.
+Nach der Anmeldung wird für den Zugriff auf das Google-Backend zusätzlich ein kurzlebiger Google-API-Zugriff angefordert. Dabei muss derselbe Google-Account gewählt werden. Erst danach werden Rollen, Werke und Reservierungen aus dem Google Sheet geladen. Der freigegebene Datenzugriff bleibt innerhalb derselben Browser-Sitzung auch über Page Reloads bestehen, solange das Google-Token noch gültig ist; danach kann Google erneut eine Freigabe verlangen.
 
 Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund öffentlich sichtbar. Im Galerie-Bereich wird nur ein Login-Hinweis angezeigt.
 
