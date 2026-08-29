@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 
 const inlinePattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g
 
-function renderInline(text: string): ReactNode[] {
+type LinkHandler = (href: string) => void
+
+function renderInline(text: string, onDocumentLink?: LinkHandler): ReactNode[] {
   const result: ReactNode[] = []
   let cursor = 0
   let match: RegExpExecArray | null
@@ -21,7 +23,12 @@ function renderInline(text: string): ReactNode[] {
       const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
       if (link) {
         const [, label, href] = link
-        result.push(<a key={key++} href={href}>{label}</a>)
+        const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+          if (!onDocumentLink || !href.endsWith('.md')) return
+          event.preventDefault()
+          onDocumentLink(href)
+        }
+        result.push(<a key={key++} href={href} onClick={handleClick}>{label}</a>)
       } else {
         result.push(token)
       }
@@ -36,9 +43,10 @@ function renderInline(text: string): ReactNode[] {
 
 type MarkdownDocumentProps = {
   source: string
+  onDocumentLink?: LinkHandler
 }
 
-function MarkdownDocument({ source }: MarkdownDocumentProps) {
+function MarkdownDocument({ source, onDocumentLink }: MarkdownDocumentProps) {
   const lines = source.replace(/\r\n/g, '\n').split('\n')
   const blocks: ReactNode[] = []
   let index = 0
@@ -73,7 +81,7 @@ function MarkdownDocument({ source }: MarkdownDocumentProps) {
     const heading = line.match(/^(#{1,4})\s+(.+)$/)
     if (heading) {
       const level = heading[1].length
-      const content = renderInline(heading[2])
+      const content = renderInline(heading[2], onDocumentLink)
       if (level === 1) blocks.push(<h1 key={key++}>{content}</h1>)
       if (level === 2) blocks.push(<h2 key={key++}>{content}</h2>)
       if (level === 3) blocks.push(<h3 key={key++}>{content}</h3>)
@@ -88,7 +96,7 @@ function MarkdownDocument({ source }: MarkdownDocumentProps) {
         items.push(lines[index].replace(/^\s*[-*]\s+/, ''))
         index += 1
       }
-      blocks.push(<ul key={key++}>{items.map((item, itemIndex) => <li key={itemIndex}>{renderInline(item)}</li>)}</ul>)
+      blocks.push(<ul key={key++}>{items.map((item, itemIndex) => <li key={itemIndex}>{renderInline(item, onDocumentLink)}</li>)}</ul>)
       continue
     }
 
@@ -98,7 +106,7 @@ function MarkdownDocument({ source }: MarkdownDocumentProps) {
         items.push(lines[index].replace(/^\s*\d+\.\s+/, ''))
         index += 1
       }
-      blocks.push(<ol key={key++}>{items.map((item, itemIndex) => <li key={itemIndex}>{renderInline(item)}</li>)}</ol>)
+      blocks.push(<ol key={key++}>{items.map((item, itemIndex) => <li key={itemIndex}>{renderInline(item, onDocumentLink)}</li>)}</ol>)
       continue
     }
 
@@ -115,7 +123,7 @@ function MarkdownDocument({ source }: MarkdownDocumentProps) {
       paragraph.push(lines[index].trim())
       index += 1
     }
-    blocks.push(<p key={key++}>{renderInline(paragraph.join(' '))}</p>)
+    blocks.push(<p key={key++}>{renderInline(paragraph.join(' '), onDocumentLink)}</p>)
   }
 
   return <div className="markdown-document">{blocks}</div>
