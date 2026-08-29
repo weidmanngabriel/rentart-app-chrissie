@@ -4,7 +4,7 @@ RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der
 
 `index.html` ist der einzige Vite-Einstieg für Entwicklung und Produktionsbuild. Vite erzeugt daraus ausschließlich im Verzeichnis `dist` die statischen Dateien für GitHub Pages. Die GitHub-Action baut und veröffentlicht `dist` bei Änderungen auf `main`; erzeugte Dateien gehören nicht ins Repository.
 
-`vite-plugin-pwa` erzeugt Manifest und Service Worker bei jedem Produktionsbuild. Die App benötigt kein eigenes Backend.
+`vite-plugin-pwa` erzeugt Manifest und Service Worker bei jedem Produktionsbuild. Die App benötigt kein eigenes Backend. Für installierte Apps werden versionierte PNG-Icons in 192×192 und 512×512 Pixeln im Manifest verwendet. `index.html` verweist zusätzlich explizit auf ein 180×180 `apple-touch-icon`, damit iOS beim Hinzufügen zum Home-Bildschirm nicht auf ein generisches Ersatzsymbol zurückfällt. Neue Icon-Dateinamen dürfen bei Icon-Änderungen bewusst verwendet werden, um besonders hartnäckige Home-Screen-Caches von iOS zu umgehen.
 
 `src/PullToRefresh.tsx` umschließt die Anwendung direkt in `src/main.tsx` und ergänzt für Touch-Geräte ein eigenes Pull-to-Refresh. Die Geste wird nur gestartet, wenn `window.scrollY === 0`. Vertikales Herunterziehen wird gedämpft visualisiert; horizontale Gesten und normales Scrollen werden nicht übernommen. Nach Überschreiten des Schwellwerts löst das Loslassen einen vollständigen `window.location.reload()` aus. Dadurch werden sowohl der aktuelle PWA-Stand als auch anschließend die Google-Daten neu geladen. Login-Profile und noch gültige Google-API-Tokens bleiben dabei durch die lokale Persistenz erhalten.
 
