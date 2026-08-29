@@ -137,7 +137,7 @@ function App() {
     setAuthorizing(true)
     setDataError(null)
     try {
-      const { accessToken: token, expiresInSeconds } = await requestGoogleAccessToken(GOOGLE_CLIENT_ID)
+      const { accessToken: token, expiresInSeconds } = await requestGoogleAccessToken(GOOGLE_CLIENT_ID, user.email)
       const identity = await readGoogleAccessIdentity(token)
       if (identity.email !== user.email.toLowerCase()) {
         throw new Error(`Bitte wähle für den Datenzugriff dasselbe Google-Konto (${user.email}).`)
