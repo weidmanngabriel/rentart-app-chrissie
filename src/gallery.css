@@ -1,4 +1,10 @@
-.backend-gallery-heading { align-items: flex-start; }
+.backend-gallery-heading { align-items: flex-start; margin-top: 2.5rem; }
+.app-area-nav { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .8rem; margin-bottom: 1rem; }
+.app-area-button { min-height: 94px; padding: 1rem 1.1rem; border: 1px solid rgba(28,27,25,.14); border-radius: 18px; background: rgba(255,255,255,.55); text-align: left; display: grid; align-content: center; gap: .35rem; transition: transform .18s ease, background .18s ease, border-color .18s ease; }
+.app-area-button:hover { transform: translateY(-2px); border-color: rgba(28,27,25,.32); }
+.app-area-button.is-active { background: #1c1b19; color: #fff; border-color: #1c1b19; }
+.app-area-button strong { font-size: .95rem; }
+.app-area-button small { opacity: .62; line-height: 1.35; }
 .role-summary { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; min-width: 220px; }
 .role-summary small { opacity: .65; }
 .role-badge { display: inline-flex; align-items: center; min-height: 28px; padding: 0 .7rem; border-radius: 999px; font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; background: #ece6dc; }
@@ -15,11 +21,13 @@
 .artwork-form label small { font-weight: 400; opacity: .6; }
 .artwork-form input, .artwork-form textarea, .artwork-form select { width: 100%; box-sizing: border-box; border: 1px solid rgba(28,27,25,.2); border-radius: 12px; background: #fff; padding: .85rem .95rem; font: inherit; color: inherit; }
 .artwork-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
-.backend-art-grid { align-items: stretch; }
+.backend-art-grid { align-items: stretch; margin-top: 2rem; }
 .backend-work-card { display: flex; flex-direction: column; }
-.backend-work-image { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 2px; background: #ddd6ca; }
+.backend-work-image { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 2px; background: #ddd6ca; position: relative; }
 .backend-artwork-image { width: 100%; height: 100%; display: block; object-fit: cover; }
 .backend-artwork-placeholder { width: 100%; height: 100%; display: grid; place-items: center; background: linear-gradient(135deg,#efe7d8,#b9a58d); font-weight: 900; letter-spacing: .14em; }
+.favorite-button { position: absolute; top: .75rem; right: .75rem; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(251,250,247,.92); display: grid; place-items: center; font-size: 1.45rem; line-height: 1; box-shadow: 0 5px 18px rgba(0,0,0,.12); }
+.favorite-button.is-favorite { color: #e85c32; }
 .backend-work-meta { align-items: flex-start; gap: 1rem; }
 .backend-work-meta > strong { white-space: nowrap; }
 .artwork-status { display: inline-block; margin-bottom: .4rem; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .55; }
@@ -36,16 +44,30 @@
 .backend-empty { margin: 2rem 0; padding: 2rem; border: 1px dashed rgba(28,27,25,.25); border-radius: 22px; text-align: center; }
 .backend-empty h3 { font-size: 1.8rem; margin: .2rem 0 .5rem; }
 .backend-empty p { max-width: 570px; margin: 0 auto 1rem; }
+.profile-panel { margin-top: 2rem; padding: 2rem; border: 1px solid rgba(28,27,25,.14); border-radius: 24px; background: rgba(255,255,255,.6); display: flex; align-items: center; gap: 1.4rem; max-width: 720px; }
+.profile-avatar { width: 78px; height: 78px; flex: 0 0 78px; border-radius: 50%; background: #e85c32; color: #fff; display: grid; place-items: center; font-size: 2rem; font-weight: 800; }
+.profile-panel h3 { margin: .7rem 0 .2rem; font-size: 1.7rem; }
+.profile-panel p { margin: 0 0 .7rem; }
+.profile-panel small { opacity: .62; line-height: 1.5; }
 .data-access-gate { padding: 2rem; border: 1px solid rgba(28,27,25,.15); border-radius: 24px; background: rgba(255,255,255,.5); max-width: 720px; }
 .data-access-gate h3 { font-size: 2rem; margin: .3rem 0 .7rem; }
 .data-access-gate p { line-height: 1.65; }
 .data-access-gate .button { margin-top: .7rem; }
 .role-missing { padding: 2rem; border-radius: 24px; background: #eee8de; }
 .role-missing code { display: inline-block; margin: .7rem 0; padding: .2rem .45rem; background: rgba(255,255,255,.65); border-radius: 5px; }
+@media (max-width: 900px) {
+  .app-area-nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
 @media (max-width: 720px) {
   .backend-gallery-heading { display: grid; gap: 1.5rem; }
+  .app-area-nav { grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .app-area-button { min-height: 84px; padding: .85rem; }
+  .app-area-button strong { font-size: .84rem; }
+  .app-area-button small { font-size: .7rem; }
   .artwork-form-grid { grid-template-columns: 1fr; }
   .artwork-form-heading { flex-direction: column; }
   .reservation-note { flex-direction: column; gap: .2rem; }
   .reservation-note span { text-align: left; }
+  .profile-panel { align-items: flex-start; padding: 1.35rem; }
+  .profile-avatar { width: 58px; height: 58px; flex-basis: 58px; font-size: 1.4rem; }
 }
