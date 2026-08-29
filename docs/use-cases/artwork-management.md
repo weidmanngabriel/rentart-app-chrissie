@@ -18,13 +18,12 @@ flowchart TD
     J --> G
 
     C -->|Werk löschen| K{Aktive Reservierung?}
-    K -->|Ja| L[Löschen nicht möglich]
-    L --> M[Zuerst Rückgabe abschließen]
-    M --> B
     K -->|Nein| N[Werk aus Database löschen]
+    K -->|Ja| L[Aktive Reservierung automatisch beenden]
+    L --> N
     N --> O[Zugehöriges Bild aus Images löschen]
 ```
 
 ## PoC-Regel
 
-Ein Werk mit aktiver Reservierung wird nicht gelöscht. Nach bestätigter Rückgabe ist es wieder verfügbar und kann anschließend gelöscht werden.
+Ein Werk darf auch mit aktiver Reservierung direkt gelöscht werden. In diesem Fall beendet die Anwendung die aktive Reservierung automatisch und löscht anschließend das Werk samt Bild. Der Künstler muss das Werk vorher nicht erst manuell auf verfügbar setzen.
