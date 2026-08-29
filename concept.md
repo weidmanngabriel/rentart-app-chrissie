@@ -4,7 +4,7 @@ RentArt ist eine Plattform für lokale Kunst. Nutzer können Werke entdecken, f�
 
 Die öffentliche Einstiegsseite erklärt RentArt. Die Galerie ist ein geschützter Bereich und wird erst nach Anmeldung mit einem Google-Konto angezeigt. Es gibt keine eigene Benutzerverwaltung und keine RentArt-Passwörter.
 
-Die Google-Anmeldung ist jederzeit im Header erreichbar. Ohne Anmeldung zeigt der Header den Google-Anmeldebutton; nach der Anmeldung erscheinen dort das Google-Profil und die Möglichkeit zum Abmelden. Der Galerie-Bereich selbst enthält keine zusätzliche An- oder Abmeldung.
+Die Google-Anmeldung ist jederzeit im Header erreichbar. Ohne Anmeldung zeigt der Header den Google-Anmeldebutton. Nach der Anmeldung erscheint dort das Google-Profil als Konto-Button; ein Klick darauf öffnet ein kleines Kontomenü mit Name, E-Mail-Adresse und einer klar sichtbaren Abmeldeaktion. Der Galerie-Bereich selbst enthält keine zusätzliche An- oder Abmeldung.
 
 Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund öffentlich sichtbar. Im Galerie-Bereich wird nur ein Login-Hinweis angezeigt. Erst nach erfolgreichem Login werden Galerieüberschrift, Filter und Kunstwerke eingeblendet.
 
