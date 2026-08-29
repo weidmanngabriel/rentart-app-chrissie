@@ -41,6 +41,7 @@ type GoogleAccountsOAuth2 = {
   initTokenClient: (config: {
     client_id: string
     scope: string
+    login_hint?: string
     callback: (response: GoogleTokenResponse) => void
     error_callback?: (error: { type?: string }) => void
   }) => GoogleTokenClient

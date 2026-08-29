@@ -114,7 +114,7 @@
   top: calc(100% + 10px);
   right: 0;
   z-index: 20;
-  min-width: 240px;
+  min-width: 270px;
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -145,6 +145,105 @@
   margin-top: 3px;
   color: #89847a;
   font-size: 10px;
+}
+
+.account-switcher,
+.account-add {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.account-section-label {
+  display: block;
+  margin: 0 2px 7px;
+  color: #89847a;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.account-option {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+
+.account-option:not(:disabled) {
+  cursor: pointer;
+}
+
+.account-option:not(:disabled):hover {
+  background: rgba(29, 29, 27, .06);
+}
+
+.account-option:disabled {
+  opacity: 1;
+}
+
+.account-option img,
+.account-option-initial {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.account-option img {
+  object-fit: cover;
+}
+
+.account-option-initial {
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.account-option > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.account-option strong,
+.account-option small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-option strong {
+  font-size: 10px;
+}
+
+.account-option small {
+  margin-top: 2px;
+  color: #89847a;
+  font-size: 9px;
+}
+
+.account-option b {
+  font-size: 12px;
+}
+
+.account-add-google {
+  min-height: 32px;
+}
+
+.account-add-loading {
+  color: #89847a;
+  font-size: 9px;
 }
 
 .logout-button {
@@ -271,7 +370,7 @@
   }
 
   .account-popover {
-    min-width: 220px;
+    min-width: 240px;
   }
 
   .menu-toggle {
@@ -301,6 +400,6 @@
 
   .account-popover {
     right: -34px;
-    min-width: 205px;
+    min-width: 225px;
   }
 }
