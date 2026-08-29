@@ -25,6 +25,16 @@ Google Sheets dient als einfacher Datenspeicher.
 
 Das konkrete Datenmodell und die benötigten Sheets dürfen passend zur jeweiligen Funktion der Anwendung gestaltet werden.
 
+## PoC-Datenbackend
+
+Der Proof of Concept verwendet das Google Sheet `Database` mit der ID `12F0kf0pVO-DcOIwoVbR49SgdJGr-DSZl0CdU-jVVwpI` und den Drive-Ordner `Images` mit der ID `1D2MBmtvGUYpc4i8Hg9ul0ki34ObBezmv`.
+
+Das Sheet enthält die Tabs `Users`, `Artworks` und `Reservations`.
+
+Im Tab `Users` wird über die Google-E-Mail-Adresse festgelegt, welche fachliche Rolle ein Account im Frontend erhält. Erlaubte Rollenwerte sind exakt `artist` und `customer`. Zusätzlich muss `active` auf TRUE stehen. Ein Account ohne aktive gültige Rolle erhält keinen fachlichen Galerie-Zugriff.
+
+Die Rollen sind im PoC eine UI- und Fachlogik, keine harte Sicherheitsgrenze. Alle freigegebenen Google-Konten gelten als vertrauenswürdig und dürfen technisch direkt auf die Google-Ressourcen zugreifen.
+
 ## Dateien und Bilder
 
 Bilder und andere Dateien werden über Google Drive gespeichert.
@@ -42,6 +52,10 @@ Die tatsächlichen Zugriffsrechte werden über die Freigaben der verwendeten Goo
 Implementiere keine eigene Benutzerverwaltung und kein eigenes Passwortsystem.
 
 Der OAuth-Client ist ein Client vom Typ Webanwendung. Seine öffentliche Client-ID liegt als GitHub-Repository-Variable `GOOGLE_CLIENT_ID` vor und wird beim Build als `VITE_GOOGLE_CLIENT_ID` bereitgestellt. Die Client-ID ist kein Secret; ein Client-Secret darf nie verwendet oder gespeichert werden.
+
+Google Identity Services trennt Anmeldung und API-Autorisierung. Das ID-Credential identifiziert den Nutzer; für Sheets und Drive fordert der Client zusätzlich ein kurzlebiges Access Token an. Das Access Token wird nicht persistent gespeichert. Vor dem Datenzugriff wird geprüft, dass Login und API-Autorisierung dieselbe Google-E-Mail-Adresse verwenden.
+
+Für den PoC werden die OAuth-Scopes `openid`, `email`, `profile`, `https://www.googleapis.com/auth/spreadsheets` und `https://www.googleapis.com/auth/drive` verwendet.
 
 ## Sicherheit
 
