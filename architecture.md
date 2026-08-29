@@ -6,6 +6,10 @@ RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der
 
 `vite-plugin-pwa` erzeugt Manifest und Service Worker bei jedem Produktionsbuild. Die App benötigt kein eigenes Backend.
 
+## Deployment
+
+GitHub Pages verwendet **GitHub Actions** als Veröffentlichungsquelle. Der Workflow installiert die Abhängigkeiten, führt `npm run build` aus und veröffentlicht anschließend nur das erzeugte `dist`-Artefakt. Generierte Build- und PWA-Dateien werden nicht versioniert. Nach jeder Änderung auf `main` muss der Workflow erfolgreich abgeschlossen sein.
+
 ## Anmeldung
 
 Die Anmeldung verwendet Google Identity Services im Browser. Der öffentliche OAuth-Web-Client wird über `VITE_GOOGLE_CLIENT_ID` konfiguriert. Für den GitHub-Pages-Build liest die Action den Wert aus der Repository-Variable `GOOGLE_CLIENT_ID`. Die Client-ID ist kein Secret; ein Client-Secret darf nicht im Frontend oder Repository liegen.

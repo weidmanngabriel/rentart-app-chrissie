@@ -41,6 +41,8 @@ Die tatsächlichen Zugriffsrechte werden über die Freigaben der verwendeten Goo
 
 Implementiere keine eigene Benutzerverwaltung und kein eigenes Passwortsystem.
 
+Der OAuth-Client ist ein Client vom Typ Webanwendung. Seine öffentliche Client-ID liegt als GitHub-Repository-Variable `GOOGLE_CLIENT_ID` vor und wird beim Build als `VITE_GOOGLE_CLIENT_ID` bereitgestellt. Die Client-ID ist kein Secret; ein Client-Secret darf nie verwendet oder gespeichert werden.
+
 ## Sicherheit
 
 Keine privaten Secrets oder Zugangsdaten in das Repository oder den ausgelieferten Client einbauen.
@@ -54,6 +56,8 @@ Verwende für Google ausschließlich Mechanismen, die für öffentliche Browser-
 Die Anwendung wird über GitHub Pages bereitgestellt. Das bedeutet, dass der Code in diesem Repo öffentlich einsehbar ist. Speichere also nie Credentials oder sowas im Projekt, sondern verwende immer sichere Verfahren.
 
 Richte eine geeignete GitHub-Actions-Pipeline ein, sodass Änderungen am vorgesehenen Branch automatisch gebaut und veröffentlicht werden.
+
+GitHub Pages muss als Veröffentlichungsquelle **GitHub Actions** verwenden, nicht einen Repository-Branch. Die Action baut `dist` und veröffentlicht ausschließlich dieses Artefakt. Generierte Dateien wie `dist`, `sw.js`, `manifest.webmanifest`, `workbox-*` und gebündelte Dateien in `assets/` dürfen nicht ins Repository committed werden. Prüfe nach Änderungen immer den Status der GitHub Action.
 
 ## Entwicklungsprinzipien
 
