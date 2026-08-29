@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { GOOGLE_SESSION_KEY, readGoogleCredential, type GoogleUser } from './auth/google'
+import {
+  readActiveGoogleAccount,
+  readStoredGoogleAccounts,
+  removeGoogleAccount,
+  setActiveGoogleAccount,
+  storeGoogleAccount,
+  type GoogleUser,
+} from './auth/google'
 import {
   clearGoogleAccessSession,
   readGoogleAccessIdentity,
@@ -18,6 +25,7 @@ function Brand() {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accounts, setAccounts] = useState<GoogleUser[]>([])
   const [user, setUser] = useState<GoogleUser | null>(null)
   const [googleReady, setGoogleReady] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(null)
@@ -26,13 +34,12 @@ function App() {
   const [dataError, setDataError] = useState<string | null>(null)
   const [authorizing, setAuthorizing] = useState(false)
   const googleButtonRef = useRef<HTMLDivElement>(null)
+  const addGoogleButtonRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const storedCredential = sessionStorage.getItem(GOOGLE_SESSION_KEY)
-    if (!storedCredential) return
-    const storedUser = readGoogleCredential(storedCredential)
-    if (storedUser) setUser(storedUser)
-    else sessionStorage.removeItem(GOOGLE_SESSION_KEY)
+    const storedAccounts = readStoredGoogleAccounts()
+    setAccounts(storedAccounts)
+    setUser(readActiveGoogleAccount(storedAccounts))
   }, [])
 
   useEffect(() => {
@@ -42,20 +49,22 @@ function App() {
   }, [user, accessToken])
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || user) return
+    if (!GOOGLE_CLIENT_ID) return
 
     const initializeGoogle = () => {
-      if (!window.google?.accounts.id || !googleButtonRef.current) return false
+      if (!window.google?.accounts.id) return false
+      const target = user ? addGoogleButtonRef.current : googleButtonRef.current
+      if (!target) return false
 
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         auto_select: false,
         cancel_on_tap_outside: true,
         callback: ({ credential }) => {
-          const nextUser = readGoogleCredential(credential)
+          const nextUser = storeGoogleAccount(credential)
           if (!nextUser) return
-          sessionStorage.setItem(GOOGLE_SESSION_KEY, credential)
-          clearGoogleAccessSession()
+          const nextAccounts = readStoredGoogleAccounts()
+          setAccounts(nextAccounts)
           setUser(nextUser)
           setAccessToken(null)
           setDatabase(null)
@@ -63,13 +72,13 @@ function App() {
         },
       })
 
-      googleButtonRef.current.replaceChildren()
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
+      target.replaceChildren()
+      window.google.accounts.id.renderButton(target, {
         type: 'standard',
         theme: 'outline',
         size: 'medium',
         shape: 'pill',
-        text: 'signin_with',
+        text: user ? 'continue_with' : 'signin_with',
         locale: 'de',
         width: 205,
       })
@@ -77,12 +86,13 @@ function App() {
       return true
     }
 
+    setGoogleReady(false)
     if (initializeGoogle()) return
     const timer = window.setInterval(() => {
       if (initializeGoogle()) window.clearInterval(timer)
     }, 150)
     return () => window.clearInterval(timer)
-  }, [user])
+  }, [user?.email])
 
   const refreshDatabase = async () => {
     if (!accessToken) return
@@ -93,7 +103,7 @@ function App() {
       setDatabase(snapshot)
     } catch (error) {
       if (error instanceof GoogleApiError && error.status === 401) {
-        clearGoogleAccessSession()
+        if (user) clearGoogleAccessSession(user.email)
         setAccessToken(null)
         setDatabase(null)
         setDataError('Der Google-Datenzugriff ist abgelaufen. Bitte aktiviere ihn erneut.')
@@ -141,15 +151,28 @@ function App() {
     }
   }
 
-  const logout = () => {
-    sessionStorage.removeItem(GOOGLE_SESSION_KEY)
-    clearGoogleAccessSession()
-    window.google?.accounts.id.disableAutoSelect()
+  const switchAccount = (nextUser: GoogleUser) => {
+    if (nextUser.email.toLowerCase() === user?.email.toLowerCase()) return
+    setActiveGoogleAccount(nextUser.email)
+    setUser(nextUser)
     setAccessToken(null)
     setDatabase(null)
     setDataError(null)
-    setUser(null)
-    setGoogleReady(false)
+  }
+
+  const logout = () => {
+    if (!user) return
+    clearGoogleAccessSession(user.email)
+    const { accounts: nextAccounts, active } = removeGoogleAccount(user.email)
+    setAccounts(nextAccounts)
+    setAccessToken(null)
+    setDatabase(null)
+    setDataError(null)
+    setUser(active)
+    if (!active) {
+      window.google?.accounts.id.disableAutoSelect()
+      setGoogleReady(false)
+    }
   }
 
   const renderGallery = () => {
@@ -172,7 +195,7 @@ function App() {
         <div className="data-access-gate">
           <p className="eyebrow">Google Backend</p>
           <h3>Datenzugriff aktivieren</h3>
-          <p>RentArt liest Werke und Rollen direkt aus dem freigegebenen Google Sheet und lädt Bilder aus Google Drive. Google fragt dafür nach den nötigen Berechtigungen; innerhalb der aktuellen Browser-Sitzung bleibt der Zugriff über Page Reloads erhalten.</p>
+          <p>RentArt liest Werke und Rollen direkt aus dem freigegebenen Google Sheet und lädt Bilder aus Google Drive. Google fragt dafür nach den nötigen Berechtigungen; innerhalb der aktuellen Browser-Sitzung bleibt der Zugriff für dieses Konto über Page Reloads und Accountwechsel erhalten.</p>
           {dataError && <div className="data-message error" role="alert">{dataError}</div>}
           <button className="button button-primary" onClick={activateDataAccess} disabled={authorizing}>{authorizing ? 'Google wird geöffnet …' : 'Google-Daten freigeben'}</button>
         </div>
@@ -201,7 +224,7 @@ function App() {
         database={database}
         onRefresh={refreshDatabase}
         onAccessExpired={() => {
-          clearGoogleAccessSession()
+          clearGoogleAccessSession(user.email)
           setAccessToken(null)
           setDatabase(null)
         }}
@@ -232,7 +255,27 @@ function App() {
                   <small>{user.email}</small>
                   {backendUser?.active && backendUser.role && <small>{backendUser.role === 'artist' ? 'Künstler' : 'Mieter'}</small>}
                 </div>
-                <button className="logout-button" onClick={logout}>Abmelden</button>
+                {accounts.length > 1 && (
+                  <div className="account-switcher" aria-label="Gespeicherte Google-Konten">
+                    <small className="account-section-label">Konto wechseln</small>
+                    {accounts.map((account) => {
+                      const active = account.email.toLowerCase() === user.email.toLowerCase()
+                      return (
+                        <button className={`account-option ${active ? 'is-active' : ''}`} key={account.sub} onClick={() => switchAccount(account)} disabled={active}>
+                          {account.picture ? <img src={account.picture} alt="" referrerPolicy="no-referrer" /> : <span className="account-option-initial">{account.name.charAt(0)}</span>}
+                          <span><strong>{account.name}</strong><small>{account.email}</small></span>
+                          {active && <b aria-label="Aktiv">✓</b>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <div className="account-add">
+                  <small className="account-section-label">Weiteres Konto hinzufügen</small>
+                  <div className="google-button account-add-google" ref={addGoogleButtonRef} aria-label="Weiteres Google-Konto hinzufügen" />
+                  {!googleReady && <span className="account-add-loading">Google wird geladen …</span>}
+                </div>
+                <button className="logout-button" onClick={logout}>Dieses Konto abmelden</button>
               </div>
             </details>
           ) : GOOGLE_CLIENT_ID ? (
