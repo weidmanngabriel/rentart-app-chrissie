@@ -1,37 +1,25 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { GOOGLE_SESSION_KEY, readGoogleCredential, type GoogleUser } from './auth/google'
-
-type Category = 'Alle Werke' | 'Abstrakt' | 'Fotografie' | 'Grafik'
-
-type Artwork = {
-  number: string
-  title: string
-  artist: string
-  city: string
-  price: string
-  category: Exclude<Category, 'Alle Werke'>
-  visualClass: string
-}
+import { readGoogleAccessIdentity, requestGoogleAccessToken } from './auth/googleAccess'
+import Gallery from './gallery/Gallery'
+import { GoogleApiError, loadDatabase, type DatabaseSnapshot } from './data/googleData'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
-
-const artworks: Artwork[] = [
-  { number: '01', title: 'Soft Geometry', artist: 'Mara Klein', city: 'Berlin', price: '29 €', category: 'Abstrakt', visualClass: 'work-one' },
-  { number: '02', title: 'Sunday Light', artist: 'Jonas Weber', city: 'Köln', price: '35 €', category: 'Fotografie', visualClass: 'work-two' },
-  { number: '03', title: 'In Between', artist: 'Lena Park', city: 'Hamburg', price: '25 €', category: 'Grafik', visualClass: 'work-three' },
-]
 
 function Brand() {
   return <a className="brand" href="#top" aria-label="RentArt Startseite"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span><span>rent<span>art</span></span></a>
 }
 
 function App() {
-  const [category, setCategory] = useState<Category>('Alle Werke')
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState<GoogleUser | null>(null)
   const [googleReady, setGoogleReady] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [database, setDatabase] = useState<DatabaseSnapshot | null>(null)
+  const [dataLoading, setDataLoading] = useState(false)
+  const [dataError, setDataError] = useState<string | null>(null)
+  const [authorizing, setAuthorizing] = useState(false)
   const googleButtonRef = useRef<HTMLDivElement>(null)
-  const filteredArtworks = category === 'Alle Werke' ? artworks : artworks.filter((artwork) => artwork.category === category)
 
   useEffect(() => {
     const storedCredential = sessionStorage.getItem(GOOGLE_SESSION_KEY)
@@ -56,6 +44,9 @@ function App() {
           if (!nextUser) return
           sessionStorage.setItem(GOOGLE_SESSION_KEY, credential)
           setUser(nextUser)
+          setAccessToken(null)
+          setDatabase(null)
+          setDataError(null)
         },
       })
 
@@ -80,16 +71,125 @@ function App() {
     return () => window.clearInterval(timer)
   }, [user])
 
+  const refreshDatabase = async () => {
+    if (!accessToken) return
+    setDataLoading(true)
+    setDataError(null)
+    try {
+      const snapshot = await loadDatabase(accessToken)
+      setDatabase(snapshot)
+    } catch (error) {
+      if (error instanceof GoogleApiError && error.status === 401) {
+        setAccessToken(null)
+        setDatabase(null)
+        setDataError('Der Google-Datenzugriff ist abgelaufen. Bitte aktiviere ihn erneut.')
+      } else {
+        setDataError(error instanceof Error ? error.message : 'Die Google-Daten konnten nicht geladen werden.')
+      }
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!accessToken) return
+    void refreshDatabase()
+  }, [accessToken])
+
+  const backendUser = useMemo(() => {
+    if (!user || !database) return null
+    const match = database.users.find((entry) => entry.email === user.email.toLowerCase())
+    if (!match) return null
+    return { ...match, displayName: match.displayName || user.name }
+  }, [database, user])
+
   const scrollTo = (id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
     setMenuOpen(false)
   }
 
+  const activateDataAccess = async () => {
+    if (!GOOGLE_CLIENT_ID || !user) return
+    setAuthorizing(true)
+    setDataError(null)
+    try {
+      const token = await requestGoogleAccessToken(GOOGLE_CLIENT_ID)
+      const identity = await readGoogleAccessIdentity(token)
+      if (identity.email !== user.email.toLowerCase()) {
+        throw new Error(`Bitte wähle für den Datenzugriff dasselbe Google-Konto (${user.email}).`)
+      }
+      setAccessToken(token)
+    } catch (error) {
+      setDataError(error instanceof Error ? error.message : 'Google-Datenzugriff konnte nicht aktiviert werden.')
+    } finally {
+      setAuthorizing(false)
+    }
+  }
+
   const logout = () => {
     sessionStorage.removeItem(GOOGLE_SESSION_KEY)
     window.google?.accounts.id.disableAutoSelect()
+    setAccessToken(null)
+    setDatabase(null)
+    setDataError(null)
     setUser(null)
     setGoogleReady(false)
+  }
+
+  const renderGallery = () => {
+    if (!user) {
+      return (
+        <div className="login-gate">
+          <div className="login-gate-art" aria-hidden="true"><span>PRIVATE<br /><em>COLLECTION</em></span><small>RENTART / ACCESS</small></div>
+          <div className="login-gate-copy">
+            <p className="eyebrow">Galerie</p>
+            <h2>Deine Auswahl.<br /><em>Nur einen Login entfernt.</em></h2>
+            <p>Die Galerie ist nur für angemeldete Nutzer sichtbar. Melde dich oben im Header mit deinem Google-Konto an.</p>
+            <small className="privacy-note">Die Anmeldung läuft direkt über Google. RentArt speichert kein Passwort.</small>
+          </div>
+        </div>
+      )
+    }
+
+    if (!accessToken) {
+      return (
+        <div className="data-access-gate">
+          <p className="eyebrow">Google Backend</p>
+          <h3>Datenzugriff aktivieren</h3>
+          <p>RentArt liest Werke und Rollen direkt aus dem freigegebenen Google Sheet und lädt Bilder aus Google Drive. Google fragt dafür einmal nach den nötigen Berechtigungen.</p>
+          {dataError && <div className="data-message error" role="alert">{dataError}</div>}
+          <button className="button button-primary" onClick={activateDataAccess} disabled={authorizing}>{authorizing ? 'Google wird geöffnet …' : 'Google-Daten freigeben'}</button>
+        </div>
+      )
+    }
+
+    if (dataLoading && !database) return <div className="data-message info">Galerie wird aus Google Sheets geladen …</div>
+    if (dataError && !database) return <div className="data-message error" role="alert">{dataError}</div>
+    if (!database) return null
+
+    if (!backendUser || !backendUser.active || !backendUser.role) {
+      return (
+        <div className="role-missing">
+          <p className="eyebrow">Zugriff nicht eingerichtet</p>
+          <h3>Dieser Google-Account hat noch keine aktive RentArt-Rolle.</h3>
+          <p>Trage im Google Sheet im Tab <strong>Users</strong> eine Zeile für <code>{user.email}</code> ein. Setze <strong>role</strong> auf <code>artist</code> oder <code>customer</code> und <strong>active</strong> auf TRUE.</p>
+          <button className="button button-dark" onClick={refreshDatabase}>Rolle neu laden</button>
+        </div>
+      )
+    }
+
+    return (
+      <Gallery
+        accessToken={accessToken}
+        currentUser={backendUser}
+        database={database}
+        onRefresh={refreshDatabase}
+        onAccessExpired={() => {
+          setAccessToken(null)
+          setDatabase(null)
+        }}
+      />
+    )
   }
 
   return (
@@ -113,6 +213,7 @@ function App() {
                 <div className="account-popover-user">
                   <strong>{user.name}</strong>
                   <small>{user.email}</small>
+                  {backendUser?.active && backendUser.role && <small>{backendUser.role === 'artist' ? 'Künstler' : 'Mieter'}</small>}
                 </div>
                 <button className="logout-button" onClick={logout}>Abmelden</button>
               </div>
@@ -155,30 +256,11 @@ function App() {
 
         <section className="marquee" aria-label="RentArt Werte"><div className="marquee-track"><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span><b>✳</b><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span></div></section>
 
-        <section className="discover section-wrap" id="entdecken">
-          {user ? (
-            <>
-              <div className="section-heading"><div><p className="eyebrow">Deine nächste Wand</p><h2>Etwas Schönes<br /><em>wartet auf dich.</em></h2></div><p className="section-intro">Eine kuratierte Auswahl von Künstlern aus deiner Nähe. Wechsel, was dich bewegt.</p></div>
-              <div className="filter-row" role="group" aria-label="Kollektion filtern">{(['Alle Werke', 'Abstrakt', 'Fotografie', 'Grafik'] as Category[]).map((item) => <button key={item} className={`filter ${category === item ? 'active' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}</div>
-              <div className="art-grid">{filteredArtworks.map((artwork) => <article className="work-card" key={artwork.title}><div className={`work-image ${artwork.visualClass}`}><span>{artwork.number}</span></div><div className="work-meta"><div><h3>{artwork.title}</h3><p>{artwork.artist} · {artwork.city}</p></div><strong>ab {artwork.price}<small>/ Monat</small></strong></div></article>)}</div>
-              <button className="button button-dark centered" onClick={() => scrollTo('#story')}>Mehr über RentArt <span>↗</span></button>
-            </>
-          ) : (
-            <div className="login-gate">
-              <div className="login-gate-art" aria-hidden="true"><span>PRIVATE<br /><em>COLLECTION</em></span><small>RENTART / ACCESS</small></div>
-              <div className="login-gate-copy">
-                <p className="eyebrow">Galerie</p>
-                <h2>Deine Auswahl.<br /><em>Nur einen Login entfernt.</em></h2>
-                <p>Die Galerie ist nur für angemeldete Nutzer sichtbar. Melde dich oben im Header mit deinem Google-Konto an, um die verfügbaren Werke zu sehen.</p>
-                <small className="privacy-note">Die Anmeldung läuft direkt über Google. RentArt speichert kein Passwort.</small>
-              </div>
-            </div>
-          )}
-        </section>
+        <section className="discover section-wrap" id="entdecken">{renderGallery()}</section>
 
         <section className="how section-wrap" id="so-funktionierts">
           <div className="how-visual"><div className="how-number">01</div><div className="how-poster"><span>MAKE<br /><em>SPACE</em><br />FOR ART</span><small>RENTART / 001</small></div><div className="scribble">easy does it <span>↗</span></div></div>
-          <div className="how-copy"><p className="eyebrow">So einfach geht's</p><h2>Kunst darf sich<br /><em>leicht anfühlen.</em></h2><div className="steps"><div className="step"><b>01</b><div><h3>Finde dein Werk</h3><p>Melde dich an und stöbere durch unsere Auswahl.</p></div></div><div className="step"><b>02</b><div><h3>Miete deine Kunst</h3><p>Flexibel ab einem Monat. Lieferung und Aufhängung inklusive.</p></div></div><div className="step"><b>03</b><div><h3>Wechsel, wenn du willst</h3><p>Dein Geschmack verändert sich? Deine Kunst darf das auch.</p></div></div></div></div>
+          <div className="how-copy"><p className="eyebrow">So einfach geht's</p><h2>Kunst darf sich<br /><em>leicht anfühlen.</em></h2><div className="steps"><div className="step"><b>01</b><div><h3>Finde dein Werk</h3><p>Melde dich an und stöbere durch unsere Auswahl.</p></div></div><div className="step"><b>02</b><div><h3>Frage es an</h3><p>Schicke dem Künstler eine Reservierungsanfrage direkt aus der Galerie.</p></div></div><div className="step"><b>03</b><div><h3>Wechsel, wenn du willst</h3><p>Nach der Rückgabe wird das Werk wieder für andere verfügbar.</p></div></div></div></div>
         </section>
 
         <section className="story section-wrap" id="story"><p className="eyebrow">Warum RentArt?</p><h2>Mehr als ein Bild.<br /><em>Ein Gefühl für Räume.</em></h2><p className="story-text">Wir glauben, dass Kunst nicht hinter Glas warten sollte. Sie soll bei dir sein — im Alltag, im Wandel, genau dort, wo Leben passiert.</p><a className="text-link" href="mailto:hallo@rentart.de">Lern uns kennen <span>→</span></a></section>
