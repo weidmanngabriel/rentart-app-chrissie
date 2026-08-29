@@ -12,6 +12,10 @@ Nach der Anmeldung wird für den Zugriff auf das Google-Backend zusätzlich ein 
 
 Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund öffentlich sichtbar. Im Galerie-Bereich wird nur ein Login-Hinweis angezeigt.
 
+## Pull-to-Refresh in der installierten App
+
+Die installierte PWA unterstützt auf Touch-Geräten ein eigenes Pull-to-Refresh. Befindet sich die Seite ganz oben, kann sie nach unten gezogen werden. Ein sichtbarer Hinweis zeigt an, wann weit genug gezogen wurde. Beim Loslassen wird die komplette Seite neu geladen, sodass aktuelle App-Dateien und aktuelle Daten aus Google Sheets/Drive geladen werden. Normales Scrollen innerhalb der Seite wird dadurch nicht verändert.
+
 ## Rollen im Proof of Concept
 
 RentArt unterscheidet fachlich zwischen zwei Rollen:
