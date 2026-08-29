@@ -56,6 +56,12 @@ function DocsPage() {
   const [selectedId, setSelectedId] = useState(documents[0].id)
   const selected = documents.find((document) => document.id === selectedId) ?? documents[0]
 
+  const openDocumentLink = (href: string) => {
+    const fileName = href.split('/').pop()
+    const target = documents.find((document) => fileName && document.path.endsWith(fileName))
+    if (target) setSelectedId(target.id)
+  }
+
   return (
     <section className="documentation-page" aria-labelledby="documentation-title">
       <div className="documentation-heading">
@@ -85,7 +91,7 @@ function DocsPage() {
               <h2>{selected.title}</h2>
             </div>
           </header>
-          <MarkdownDocument source={selected.content} />
+          <MarkdownDocument source={selected.content} onDocumentLink={openDocumentLink} />
         </article>
       </div>
     </section>
