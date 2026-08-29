@@ -6,6 +6,8 @@ RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der
 
 `vite-plugin-pwa` erzeugt Manifest und Service Worker bei jedem Produktionsbuild. Die App benötigt kein eigenes Backend.
 
+`src/PullToRefresh.tsx` umschließt die Anwendung direkt in `src/main.tsx` und ergänzt für Touch-Geräte ein eigenes Pull-to-Refresh. Die Geste wird nur gestartet, wenn `window.scrollY === 0`. Vertikales Herunterziehen wird gedämpft visualisiert; horizontale Gesten und normales Scrollen werden nicht übernommen. Nach Überschreiten des Schwellwerts löst das Loslassen einen vollständigen `window.location.reload()` aus. Dadurch werden sowohl der aktuelle PWA-Stand als auch anschließend die Google-Daten neu geladen. Login-Profile bleiben dabei durch die bestehende lokale Persistenz erhalten.
+
 ## Deployment
 
 GitHub Pages verwendet **GitHub Actions** als Veröffentlichungsquelle. Der Workflow installiert die Abhängigkeiten, führt `npm run build` aus und veröffentlicht anschließend nur das erzeugte `dist`-Artefakt. Generierte Build- und PWA-Dateien werden nicht versioniert. Nach jeder Änderung auf `main` muss der Workflow erfolgreich abgeschlossen sein.
