@@ -8,7 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg'],
+      includeAssets: [
+        'icon.svg',
+        'apple-touch-icon-v2.png',
+        'pwa-192-v2.png',
+        'pwa-512-v2.png',
+      ],
       manifest: {
         name: 'RentArt',
         short_name: 'RentArt',
@@ -18,7 +23,9 @@ export default defineConfig({
         background_color: '#fbfaf7',
         display: 'standalone',
         icons: [
-          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: 'pwa-192-v2.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512-v2.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512-v2.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),
