@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { GOOGLE_SESSION_KEY, readGoogleCredential, type GoogleUser } from './auth/google'
-import { readGoogleAccessIdentity, requestGoogleAccessToken } from './auth/googleAccess'
+import {
+  clearGoogleAccessSession,
+  readGoogleAccessIdentity,
+  readGoogleAccessSession,
+  requestGoogleAccessToken,
+  storeGoogleAccessSession,
+} from './auth/googleAccess'
 import Gallery from './gallery/Gallery'
 import { GoogleApiError, loadDatabase, type DatabaseSnapshot } from './data/googleData'
 
@@ -30,6 +36,12 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!user || accessToken) return
+    const storedAccessToken = readGoogleAccessSession(user.email)
+    if (storedAccessToken) setAccessToken(storedAccessToken)
+  }, [user, accessToken])
+
+  useEffect(() => {
     if (!GOOGLE_CLIENT_ID || user) return
 
     const initializeGoogle = () => {
@@ -43,6 +55,7 @@ function App() {
           const nextUser = readGoogleCredential(credential)
           if (!nextUser) return
           sessionStorage.setItem(GOOGLE_SESSION_KEY, credential)
+          clearGoogleAccessSession()
           setUser(nextUser)
           setAccessToken(null)
           setDatabase(null)
@@ -80,6 +93,7 @@ function App() {
       setDatabase(snapshot)
     } catch (error) {
       if (error instanceof GoogleApiError && error.status === 401) {
+        clearGoogleAccessSession()
         setAccessToken(null)
         setDatabase(null)
         setDataError('Der Google-Datenzugriff ist abgelaufen. Bitte aktiviere ihn erneut.')
@@ -113,11 +127,12 @@ function App() {
     setAuthorizing(true)
     setDataError(null)
     try {
-      const token = await requestGoogleAccessToken(GOOGLE_CLIENT_ID)
+      const { accessToken: token, expiresInSeconds } = await requestGoogleAccessToken(GOOGLE_CLIENT_ID)
       const identity = await readGoogleAccessIdentity(token)
       if (identity.email !== user.email.toLowerCase()) {
         throw new Error(`Bitte wähle für den Datenzugriff dasselbe Google-Konto (${user.email}).`)
       }
+      storeGoogleAccessSession(token, identity.email, expiresInSeconds)
       setAccessToken(token)
     } catch (error) {
       setDataError(error instanceof Error ? error.message : 'Google-Datenzugriff konnte nicht aktiviert werden.')
@@ -128,6 +143,7 @@ function App() {
 
   const logout = () => {
     sessionStorage.removeItem(GOOGLE_SESSION_KEY)
+    clearGoogleAccessSession()
     window.google?.accounts.id.disableAutoSelect()
     setAccessToken(null)
     setDatabase(null)
@@ -156,7 +172,7 @@ function App() {
         <div className="data-access-gate">
           <p className="eyebrow">Google Backend</p>
           <h3>Datenzugriff aktivieren</h3>
-          <p>RentArt liest Werke und Rollen direkt aus dem freigegebenen Google Sheet und lädt Bilder aus Google Drive. Google fragt dafür einmal nach den nötigen Berechtigungen.</p>
+          <p>RentArt liest Werke und Rollen direkt aus dem freigegebenen Google Sheet und lädt Bilder aus Google Drive. Google fragt dafür nach den nötigen Berechtigungen; innerhalb der aktuellen Browser-Sitzung bleibt der Zugriff über Page Reloads erhalten.</p>
           {dataError && <div className="data-message error" role="alert">{dataError}</div>}
           <button className="button button-primary" onClick={activateDataAccess} disabled={authorizing}>{authorizing ? 'Google wird geöffnet …' : 'Google-Daten freigeben'}</button>
         </div>
@@ -185,6 +201,7 @@ function App() {
         database={database}
         onRefresh={refreshDatabase}
         onAccessExpired={() => {
+          clearGoogleAccessSession()
           setAccessToken(null)
           setDatabase(null)
         }}

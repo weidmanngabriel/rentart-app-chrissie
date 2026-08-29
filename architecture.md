@@ -16,7 +16,9 @@ Die Anmeldung verwendet Google Identity Services im Browser. Der öffentliche OA
 
 Die Verarbeitung des Google-ID-Credentials liegt in `src/auth/google.ts`. Nach erfolgreicher Google-Anmeldung wird dieses Credential nur für die aktuelle Browser-Sitzung in `sessionStorage` gehalten. Logout entfernt diese Sitzung wieder.
 
-Anmeldung und API-Zugriff sind getrennt: `src/auth/googleAccess.ts` verwendet `google.accounts.oauth2.initTokenClient`, um ein kurzlebiges Access Token für Google Sheets und Google Drive anzufordern. Das Access Token bleibt nur im Speicher und wird nicht persistent gespeichert. Vor dem Zugriff auf die Fachdaten wird über Google UserInfo geprüft, dass der für die APIs autorisierte Account dieselbe E-Mail-Adresse wie der angemeldete Account besitzt.
+Anmeldung und API-Zugriff sind getrennt: `src/auth/googleAccess.ts` verwendet `google.accounts.oauth2.initTokenClient`, um ein kurzlebiges Access Token für Google Sheets und Google Drive anzufordern. Vor dem Zugriff auf die Fachdaten wird über Google UserInfo geprüft, dass der für die APIs autorisierte Account dieselbe E-Mail-Adresse wie der angemeldete Account besitzt.
+
+Das kurzlebige Access Token wird zusammen mit E-Mail und Ablaufzeit ebenfalls nur in `sessionStorage` gehalten. Dadurch übersteht der Google-Datenzugriff einen Page Reload innerhalb derselben Browser-Sitzung, solange das Token noch gültig ist. Bei Ablauf, Abmeldung oder Accountwechsel wird es entfernt und muss neu angefordert werden. Es wird nicht dauerhaft in `localStorage` gespeichert.
 
 Der PoC fordert die Scopes `openid`, `email`, `profile`, `https://www.googleapis.com/auth/spreadsheets` und `https://www.googleapis.com/auth/drive` an. Für die festen Testkonten müssen Google Sheets API und Google Drive API im Google-Cloud-Projekt aktiviert und die Konten bei Bedarf als OAuth-Testnutzer hinterlegt sein.
 
@@ -42,6 +44,8 @@ Die Google-Ressourcen sind fest für den PoC konfiguriert:
 - `Reservations`: Anfrage- und Reservierungsverlauf mit `requested`, `active`, `cancelled` oder `returned`.
 
 Die Galerie lädt alle drei kleinen PoC-Tabellen gemeinsam. Verfügbarkeit wird aus offenen Reservierungen abgeleitet. Abgeschlossene Reservierungen bleiben als Historie erhalten. Beim Löschen eines Werks werden offene oder aktive Reservierungen automatisch auf `cancelled` gesetzt, danach wird die Werkzeile gelöscht und die Bilddatei aus Drive entfernt.
+
+Für leere Checkbox-Spalten im Sheet dürfen keine vorbefüllten `FALSE`-Werte über den gesamten Datenbereich stehen. Solche Werte würden Google Sheets beim `append` als belegte Zeilen behandeln und neue Datensätze ans Tabellenende verschieben. Die vorbereiteten Zeilen enthalten deshalb nur Datenvalidierung, aber keinen Zellwert.
 
 Bilder werden per Drive-API in `Images` hochgeladen. Das Sheet speichert nur die Drive-Datei-ID. Für die Darstellung lädt der Browser die Bilddatei authentifiziert und erzeugt lokal eine temporäre Object-URL.
 

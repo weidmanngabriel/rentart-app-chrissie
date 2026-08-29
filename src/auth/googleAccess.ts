@@ -6,12 +6,25 @@ export const GOOGLE_API_SCOPES = [
   'https://www.googleapis.com/auth/drive',
 ].join(' ')
 
+export const GOOGLE_ACCESS_SESSION_KEY = 'rentart-google-access'
+
 export type GoogleAccessIdentity = {
   email: string
 }
 
+type GoogleAccessToken = {
+  accessToken: string
+  expiresInSeconds: number
+}
+
+type StoredGoogleAccess = {
+  accessToken: string
+  email: string
+  expiresAt: number
+}
+
 export function requestGoogleAccessToken(clientId: string) {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<GoogleAccessToken>((resolve, reject) => {
     const oauth2 = window.google?.accounts.oauth2
     if (!oauth2) {
       reject(new Error('Google-Autorisierung ist noch nicht geladen.'))
@@ -26,13 +39,45 @@ export function requestGoogleAccessToken(clientId: string) {
           reject(new Error(response.error_description || response.error || 'Google-Zugriff wurde nicht freigegeben.'))
           return
         }
-        resolve(response.access_token)
+        resolve({
+          accessToken: response.access_token,
+          expiresInSeconds: response.expires_in ?? 3600,
+        })
       },
       error_callback: () => reject(new Error('Das Google-Fenster wurde geschlossen oder konnte nicht geöffnet werden.')),
     })
 
-    client.requestAccessToken()
+    client.requestAccessToken({ prompt: '' })
   })
+}
+
+export function storeGoogleAccessSession(accessToken: string, email: string, expiresInSeconds: number) {
+  const value: StoredGoogleAccess = {
+    accessToken,
+    email: email.toLowerCase(),
+    expiresAt: Date.now() + Math.max(0, expiresInSeconds - 30) * 1000,
+  }
+  sessionStorage.setItem(GOOGLE_ACCESS_SESSION_KEY, JSON.stringify(value))
+}
+
+export function readGoogleAccessSession(email: string) {
+  try {
+    const raw = sessionStorage.getItem(GOOGLE_ACCESS_SESSION_KEY)
+    if (!raw) return null
+    const value = JSON.parse(raw) as StoredGoogleAccess
+    if (!value.accessToken || value.email !== email.toLowerCase() || value.expiresAt <= Date.now()) {
+      sessionStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
+      return null
+    }
+    return value.accessToken
+  } catch {
+    sessionStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
+    return null
+  }
+}
+
+export function clearGoogleAccessSession() {
+  sessionStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
 }
 
 export async function readGoogleAccessIdentity(accessToken: string): Promise<GoogleAccessIdentity> {
