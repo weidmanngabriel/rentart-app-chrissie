@@ -10,7 +10,7 @@ RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der
 
 Die Anmeldung verwendet Google Identity Services im Browser. Der öffentliche OAuth-Web-Client wird über `VITE_GOOGLE_CLIENT_ID` konfiguriert. Für den GitHub-Pages-Build liest die Action den Wert aus der Repository-Variable `GOOGLE_CLIENT_ID`. Die Client-ID ist kein Secret; ein Client-Secret darf nicht im Frontend oder Repository liegen.
 
-Nach erfolgreicher Google-Anmeldung wird das von Google gelieferte ID-Credential nur für die aktuelle Browser-Sitzung in `sessionStorage` gehalten. Die Galerie wird nur bei einer gültigen, noch nicht abgelaufenen Sitzung gerendert. Logout entfernt diese Sitzung wieder.
+Die Verarbeitung des Google-Credentials liegt in `src/auth/google.ts`. Nach erfolgreicher Google-Anmeldung wird das von Google gelieferte ID-Credential nur für die aktuelle Browser-Sitzung in `sessionStorage` gehalten. Die Galerie wird nur bei einer gültigen, noch nicht abgelaufenen Sitzung gerendert. Logout entfernt diese Sitzung wieder.
 
 Diese UI-Sperre ersetzt keine Datenberechtigung. Sobald Google Sheets und Google Drive angebunden werden, müssen die tatsächlichen Lese- und Schreibrechte weiterhin über Google OAuth und die Freigaben der jeweiligen Ressourcen durchgesetzt werden.
 
