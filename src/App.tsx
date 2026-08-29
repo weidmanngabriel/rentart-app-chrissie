@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { GOOGLE_GOOGLE_SESSION_KEY, readGoogleCredential, type GoogleUser } from './auth/google'
+import { GOOGLE_SESSION_KEY, readGoogleCredential, type GoogleUser } from './auth/google'
 
 type Category = 'Alle Werke' | 'Abstrakt' | 'Fotografie' | 'Grafik'
 
