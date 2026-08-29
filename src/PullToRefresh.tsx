@@ -10,11 +10,18 @@ type PullToRefreshProps = {
 function PullToRefresh({ children }: PullToRefreshProps) {
   const [pullDistance, setPullDistance] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
+  const pullDistanceRef = useRef(0)
+  const refreshingRef = useRef(false)
   const gesture = useRef({ active: false, startX: 0, startY: 0 })
+
+  const updatePullDistance = (distance: number) => {
+    pullDistanceRef.current = distance
+    setPullDistance(distance)
+  }
 
   useEffect(() => {
     const handleTouchStart = (event: TouchEvent) => {
-      if (refreshing || window.scrollY > 0 || event.touches.length !== 1) return
+      if (refreshingRef.current || window.scrollY > 0 || event.touches.length !== 1) return
 
       const touch = event.touches[0]
       gesture.current = {
@@ -31,34 +38,29 @@ function PullToRefresh({ children }: PullToRefreshProps) {
       const deltaX = Math.abs(touch.clientX - gesture.current.startX)
       const deltaY = touch.clientY - gesture.current.startY
 
-      if (deltaY <= 0 || deltaX > deltaY) {
+      if (deltaY <= 0 || deltaX > deltaY || window.scrollY > 0) {
         gesture.current.active = false
-        setPullDistance(0)
-        return
-      }
-
-      if (window.scrollY > 0) {
-        gesture.current.active = false
-        setPullDistance(0)
+        updatePullDistance(0)
         return
       }
 
       event.preventDefault()
-      setPullDistance(Math.min(MAX_PULL_DISTANCE, deltaY * 0.55))
+      updatePullDistance(Math.min(MAX_PULL_DISTANCE, deltaY * 0.55))
     }
 
     const finishGesture = () => {
       if (!gesture.current.active) return
 
       gesture.current.active = false
-      if (pullDistance >= REFRESH_THRESHOLD) {
+      if (pullDistanceRef.current >= REFRESH_THRESHOLD) {
+        refreshingRef.current = true
         setRefreshing(true)
-        setPullDistance(REFRESH_THRESHOLD)
+        updatePullDistance(REFRESH_THRESHOLD)
         window.setTimeout(() => window.location.reload(), 180)
         return
       }
 
-      setPullDistance(0)
+      updatePullDistance(0)
     }
 
     window.addEventListener('touchstart', handleTouchStart, { passive: true })
@@ -72,7 +74,7 @@ function PullToRefresh({ children }: PullToRefreshProps) {
       window.removeEventListener('touchend', finishGesture)
       window.removeEventListener('touchcancel', finishGesture)
     }
-  }, [pullDistance, refreshing])
+  }, [])
 
   const ready = pullDistance >= REFRESH_THRESHOLD
 
