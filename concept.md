@@ -20,6 +20,17 @@ Ein noch gültiger API-Zugriff wird zusammen mit seiner Ablaufzeit lokal auf dem
 
 Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund öffentlich sichtbar. Im Galerie-Bereich wird nur ein Login-Hinweis angezeigt.
 
+## Persönlicher Bereich und Navigation
+
+Nach erfolgreichem Login und Google-Datenfreigabe wird der fachliche Bereich nicht mehr als eine einzige lange Ansicht dargestellt. Stattdessen gibt es große, direkt anwählbare Bereiche:
+
+- **Kunstwerke:** vollständige Galerie mit den vorhandenen Kategorien und Reservierungsaktionen,
+- **Favoriten:** persönlich markierte Kunstwerke,
+- **Meine Kunstwerke** für Künstler bzw. **Meine Anfragen** für Mieter,
+- **Mein Profil:** Name, E-Mail-Adresse und fachliche Rolle.
+
+Favoriten können über ein Herz direkt am Kunstwerk gesetzt oder entfernt werden. Für den Proof of Concept werden sie pro Google-Konto lokal auf dem jeweiligen Gerät gespeichert. Sie sind damit noch keine serverseitig synchronisierte Funktion und erscheinen auf einem anderen Gerät nicht automatisch.
+
 ## Fachliche Dokumente in der App
 
 Über den Menüpunkt `Dokumente` ist eine eigene Unterseite erreichbar, auf der ausschließlich fachliche Projektdokumentation direkt in RentArt gelesen werden kann. Angezeigt werden `concept.md` sowie die vorhandenen Dokumente unter `docs/use-cases/`. Technische und interne Arbeitsdokumente wie `architecture.md` und `agents.md` gehören nicht in diese Ansicht.

@@ -24,6 +24,7 @@ type GalleryProps = {
 }
 
 type Draft = ArtworkInput & { image: File | null }
+type Area = 'gallery' | 'favorites' | 'mine' | 'profile'
 
 const EMPTY_DRAFT: Draft = {
   title: '',
@@ -83,14 +84,21 @@ function roleLabel(role: BackendUser['role']) {
   return role === 'artist' ? 'Künstler' : 'Mieter'
 }
 
+function favoriteStorageKey(email: string) {
+  return `rentart:favorites:${email.toLowerCase()}`
+}
+
 export default function Gallery({ accessToken, currentUser, database, onRefresh, onAccessExpired }: GalleryProps) {
+  const [area, setArea] = useState<Area>('gallery')
   const [category, setCategory] = useState('Alle Werke')
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null)
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT)
   const [formOpen, setFormOpen] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([])
 
+  const isArtist = currentUser.role === 'artist'
   const activeArtworks = useMemo(() => database.artworks.filter((artwork) => artwork.active), [database.artworks])
   const categories = useMemo(() => {
     const values = Array.from(new Set(activeArtworks.map((artwork) => artwork.category).filter(Boolean)))
@@ -99,6 +107,15 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
   const visibleArtworks = category === 'Alle Werke'
     ? activeArtworks
     : activeArtworks.filter((artwork) => artwork.category === category)
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(favoriteStorageKey(currentUser.email)) || '[]')
+      setFavoriteIds(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string') : [])
+    } catch {
+      setFavoriteIds([])
+    }
+  }, [currentUser.email])
 
   const openReservationByArtwork = useMemo(() => {
     const map = new Map<string, Reservation>()
@@ -113,6 +130,26 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
     return new Map(database.users.map((user) => [user.email, user.displayName || user.email]))
   }, [database.users])
 
+  const favoriteArtworks = useMemo(
+    () => activeArtworks.filter((artwork) => favoriteIds.includes(artwork.id)),
+    [activeArtworks, favoriteIds],
+  )
+
+  const ownArtworks = useMemo(
+    () => activeArtworks.filter((artwork) => artwork.artistEmail === currentUser.email),
+    [activeArtworks, currentUser.email],
+  )
+
+  const ownReservations = useMemo(
+    () => database.reservations.filter((reservation) => reservation.customerEmail === currentUser.email && isOpenReservation(reservation)),
+    [database.reservations, currentUser.email],
+  )
+
+  const ownReservedArtworks = useMemo(() => {
+    const ids = new Set(ownReservations.map((reservation) => reservation.artworkId))
+    return activeArtworks.filter((artwork) => ids.has(artwork.id))
+  }, [activeArtworks, ownReservations])
+
   const runAction = async (key: string, action: () => Promise<void>) => {
     setBusy(key)
     setError(null)
@@ -126,6 +163,14 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
     } finally {
       setBusy(null)
     }
+  }
+
+  const toggleFavorite = (artworkId: string) => {
+    setFavoriteIds((current) => {
+      const next = current.includes(artworkId) ? current.filter((id) => id !== artworkId) : [...current, artworkId]
+      localStorage.setItem(favoriteStorageKey(currentUser.email), JSON.stringify(next))
+      return next
+    })
   }
 
   const openCreate = () => {
@@ -215,21 +260,94 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
   const changeReservation = (reservation: Reservation, status: 'active' | 'cancelled' | 'returned') =>
     runAction(`${status}-${reservation.id}`, () => setReservationStatus(accessToken, reservation, status))
 
-  const isArtist = currentUser.role === 'artist'
+  const renderArtworkCard = (artwork: Artwork) => {
+    const reservation = openReservationByArtwork.get(artwork.id)
+    const ownReservation = reservation?.customerEmail === currentUser.email
+    const favorite = favoriteIds.includes(artwork.id)
+
+    return (
+      <article className="work-card backend-work-card" key={artwork.id}>
+        <div className="backend-work-image">
+          <DriveImage accessToken={accessToken} artwork={artwork} />
+          <button
+            className={`favorite-button ${favorite ? 'is-favorite' : ''}`}
+            onClick={() => toggleFavorite(artwork.id)}
+            aria-label={favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+            title={favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+          >
+            {favorite ? '♥' : '♡'}
+          </button>
+        </div>
+        <div className="work-meta backend-work-meta">
+          <div>
+            <span className="artwork-status">{reservation?.status === 'requested' ? 'Angefragt' : reservation?.status === 'active' ? 'Reserviert' : 'Verfügbar'}</span>
+            <h3>{artwork.title}</h3>
+            <p>{artistNameByEmail.get(artwork.artistEmail) || artwork.artistEmail} · {artwork.category}</p>
+            {artwork.description && <p className="artwork-description">{artwork.description}</p>}
+          </div>
+          <strong>{formatPrice(artwork.priceMonthly)}<small>/ Monat</small></strong>
+        </div>
+
+        {isArtist ? (
+          <div className="artwork-actions artist-actions">
+            {reservation?.status === 'requested' && (
+              <div className="reservation-note"><strong>Anfrage</strong><span>{reservation.customerEmail}</span></div>
+            )}
+            {reservation?.status === 'active' && (
+              <div className="reservation-note"><strong>Reserviert für</strong><span>{reservation.customerEmail}</span></div>
+            )}
+            <div className="action-row">
+              {reservation?.status === 'requested' && <><button onClick={() => changeReservation(reservation, 'active')} disabled={!!busy}>Annehmen</button><button onClick={() => changeReservation(reservation, 'cancelled')} disabled={!!busy}>Ablehnen</button></>}
+              {reservation?.status === 'active' && <button onClick={() => changeReservation(reservation, 'returned')} disabled={!!busy}>Rückgabe bestätigen</button>}
+              {artwork.artistEmail === currentUser.email && <button onClick={() => openEdit(artwork)} disabled={!!busy}>Bearbeiten</button>}
+              {artwork.artistEmail === currentUser.email && <button className="danger" onClick={() => deleteArtwork(artwork)} disabled={!!busy}>Löschen</button>}
+            </div>
+          </div>
+        ) : (
+          <div className="artwork-actions customer-actions">
+            {!reservation && <button className="button button-dark" onClick={() => requestArtwork(artwork)} disabled={!!busy}>Reservierung anfragen</button>}
+            {reservation?.status === 'requested' && ownReservation && <><span>Deine Anfrage ist offen.</span><button onClick={() => changeReservation(reservation, 'cancelled')} disabled={!!busy}>Anfrage zurückziehen</button></>}
+            {reservation?.status === 'requested' && !ownReservation && <span>Aktuell angefragt.</span>}
+            {reservation?.status === 'active' && ownReservation && <span>Für dich reserviert.</span>}
+            {reservation?.status === 'active' && !ownReservation && <span>Aktuell reserviert.</span>}
+          </div>
+        )}
+      </article>
+    )
+  }
+
+  const areaItems: Array<{ id: Area; label: string; hint: string }> = [
+    { id: 'gallery', label: 'Kunstwerke', hint: 'Alle verfügbaren Werke entdecken' },
+    { id: 'favorites', label: 'Favoriten', hint: `${favoriteIds.length} gespeicherte Werke` },
+    { id: 'mine', label: isArtist ? 'Meine Kunstwerke' : 'Meine Anfragen', hint: isArtist ? 'Eigene Werke verwalten' : 'Offene Reservierungen ansehen' },
+    { id: 'profile', label: 'Mein Profil', hint: 'Konto und Rolle ansehen' },
+  ]
+
+  const sectionTitle = area === 'favorites'
+    ? <>Deine <em>Favoriten.</em></>
+    : area === 'mine'
+      ? isArtist ? <>Meine <em>Kunstwerke.</em></> : <>Meine <em>Anfragen.</em></>
+      : area === 'profile'
+        ? <>Mein <em>Profil.</em></>
+        : isArtist ? <>Galerie <em>verwalten.</em></> : <>Kunst <em>entdecken.</em></>
 
   return (
     <>
+      <div className="app-area-nav" aria-label="RentArt Bereiche">
+        {areaItems.map((item) => (
+          <button key={item.id} className={`app-area-button ${area === item.id ? 'is-active' : ''}`} onClick={() => setArea(item.id)}>
+            <strong>{item.label}</strong>
+            <small>{item.hint}</small>
+          </button>
+        ))}
+      </div>
+
       <div className="section-heading backend-gallery-heading">
         <div>
-          <p className="eyebrow">Deine nächste Wand</p>
-          <h2>{isArtist ? <>Galerie<br /><em>verwalten.</em></> : <>Etwas Schönes<br /><em>wartet auf dich.</em></>}</h2>
+          <p className="eyebrow">Dein RentArt Bereich</p>
+          <h2>{sectionTitle}</h2>
         </div>
-        <div className="role-summary">
-          <span className={`role-badge ${isArtist ? 'artist' : 'customer'}`}>{roleLabel(currentUser.role)}</span>
-          <strong>{currentUser.displayName || currentUser.email}</strong>
-          <small>{currentUser.email}</small>
-          {isArtist && <button className="button button-primary compact" onClick={openCreate}>+ Werk hinzufügen</button>}
-        </div>
+        {area === 'mine' && isArtist && <button className="button button-primary compact" onClick={openCreate}>+ Werk hinzufügen</button>}
       </div>
 
       {error && <div className="data-message error" role="alert">{error}</div>}
@@ -251,65 +369,45 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
         </form>
       )}
 
-      {categories.length > 1 && (
-        <div className="filter-row" role="group" aria-label="Kollektion filtern">
-          {categories.map((item) => <button key={item} className={`filter ${category === item ? 'active' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}
+      {area === 'profile' && (
+        <div className="profile-panel">
+          <div className="profile-avatar" aria-hidden="true">{(currentUser.displayName || currentUser.email).charAt(0).toUpperCase()}</div>
+          <div>
+            <span className={`role-badge ${isArtist ? 'artist' : 'customer'}`}>{roleLabel(currentUser.role)}</span>
+            <h3>{currentUser.displayName || currentUser.email}</h3>
+            <p>{currentUser.email}</p>
+            <small>Profilinformationen kommen aktuell aus deinem Google-Konto und dem RentArt-Users-Sheet.</small>
+          </div>
         </div>
       )}
 
-      {visibleArtworks.length === 0 ? (
-        <div className="backend-empty">
-          <p className="eyebrow">Galerie</p>
-          <h3>Noch keine Werke vorhanden.</h3>
-          <p>{isArtist ? 'Lege das erste Werk an. Bild und Daten werden direkt in Google Drive und Google Sheets gespeichert.' : 'Sobald ein Künstler Werke einstellt, erscheinen sie hier.'}</p>
-          {isArtist && <button className="button button-primary" onClick={openCreate}>Erstes Werk hinzufügen</button>}
-        </div>
-      ) : (
-        <div className="art-grid backend-art-grid">
-          {visibleArtworks.map((artwork) => {
-            const reservation = openReservationByArtwork.get(artwork.id)
-            const ownReservation = reservation?.customerEmail === currentUser.email
-            return (
-              <article className="work-card backend-work-card" key={artwork.id}>
-                <div className="backend-work-image"><DriveImage accessToken={accessToken} artwork={artwork} /></div>
-                <div className="work-meta backend-work-meta">
-                  <div>
-                    <span className="artwork-status">{reservation?.status === 'requested' ? 'Angefragt' : reservation?.status === 'active' ? 'Reserviert' : 'Verfügbar'}</span>
-                    <h3>{artwork.title}</h3>
-                    <p>{artistNameByEmail.get(artwork.artistEmail) || artwork.artistEmail} · {artwork.category}</p>
-                    {artwork.description && <p className="artwork-description">{artwork.description}</p>}
-                  </div>
-                  <strong>{formatPrice(artwork.priceMonthly)}<small>/ Monat</small></strong>
-                </div>
+      {area === 'gallery' && (
+        <>
+          {categories.length > 1 && (
+            <div className="filter-row" role="group" aria-label="Kollektion filtern">
+              {categories.map((item) => <button key={item} className={`filter ${category === item ? 'active' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}
+            </div>
+          )}
+          {visibleArtworks.length === 0 ? (
+            <div className="backend-empty"><p className="eyebrow">Galerie</p><h3>Noch keine Werke vorhanden.</h3><p>Sobald Werke eingestellt sind, erscheinen sie hier.</p></div>
+          ) : <div className="art-grid backend-art-grid">{visibleArtworks.map(renderArtworkCard)}</div>}
+        </>
+      )}
 
-                {isArtist ? (
-                  <div className="artwork-actions artist-actions">
-                    {reservation?.status === 'requested' && (
-                      <div className="reservation-note"><strong>Anfrage</strong><span>{reservation.customerEmail}</span></div>
-                    )}
-                    {reservation?.status === 'active' && (
-                      <div className="reservation-note"><strong>Reserviert für</strong><span>{reservation.customerEmail}</span></div>
-                    )}
-                    <div className="action-row">
-                      {reservation?.status === 'requested' && <><button onClick={() => changeReservation(reservation, 'active')} disabled={!!busy}>Annehmen</button><button onClick={() => changeReservation(reservation, 'cancelled')} disabled={!!busy}>Ablehnen</button></>}
-                      {reservation?.status === 'active' && <button onClick={() => changeReservation(reservation, 'returned')} disabled={!!busy}>Rückgabe bestätigen</button>}
-                      <button onClick={() => openEdit(artwork)} disabled={!!busy}>Bearbeiten</button>
-                      <button className="danger" onClick={() => deleteArtwork(artwork)} disabled={!!busy}>Löschen</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="artwork-actions customer-actions">
-                    {!reservation && <button className="button button-dark" onClick={() => requestArtwork(artwork)} disabled={!!busy}>Reservierung anfragen</button>}
-                    {reservation?.status === 'requested' && ownReservation && <><span>Deine Anfrage ist offen.</span><button onClick={() => changeReservation(reservation, 'cancelled')} disabled={!!busy}>Anfrage zurückziehen</button></>}
-                    {reservation?.status === 'requested' && !ownReservation && <span>Aktuell angefragt.</span>}
-                    {reservation?.status === 'active' && ownReservation && <span>Für dich reserviert.</span>}
-                    {reservation?.status === 'active' && !ownReservation && <span>Aktuell reserviert.</span>}
-                  </div>
-                )}
-              </article>
-            )
-          })}
-        </div>
+      {area === 'favorites' && (
+        favoriteArtworks.length === 0 ? (
+          <div className="backend-empty"><p className="eyebrow">Favoriten</p><h3>Noch keine Favoriten.</h3><p>Tippe bei einem Kunstwerk auf das Herz. Deine Auswahl wird auf diesem Gerät gespeichert.</p><button className="button button-primary" onClick={() => setArea('gallery')}>Kunstwerke entdecken</button></div>
+        ) : <div className="art-grid backend-art-grid">{favoriteArtworks.map(renderArtworkCard)}</div>
+      )}
+
+      {area === 'mine' && (
+        isArtist ? (
+          ownArtworks.length === 0 ? (
+            <div className="backend-empty"><p className="eyebrow">Meine Kunstwerke</p><h3>Noch keine eigenen Werke.</h3><p>Lege dein erstes Werk an. Bild und Daten werden direkt in Google Drive und Google Sheets gespeichert.</p><button className="button button-primary" onClick={openCreate}>Erstes Werk hinzufügen</button></div>
+          ) : <div className="art-grid backend-art-grid">{ownArtworks.map(renderArtworkCard)}</div>
+        ) : ownReservedArtworks.length === 0 ? (
+          <div className="backend-empty"><p className="eyebrow">Meine Anfragen</p><h3>Keine offenen Anfragen.</h3><p>Deine offenen oder angenommenen Reservierungen erscheinen hier.</p><button className="button button-primary" onClick={() => setArea('gallery')}>Kunstwerke entdecken</button></div>
+        ) : <div className="art-grid backend-art-grid">{ownReservedArtworks.map(renderArtworkCard)}</div>
       )}
     </>
   )
