@@ -103,11 +103,20 @@ function App() {
         </nav>
         <div className="header-auth">
           {user ? (
-            <div className="account-chip">
-              {user.picture ? <img src={user.picture} alt="" referrerPolicy="no-referrer" /> : <span className="account-initial">{user.name.charAt(0)}</span>}
-              <div className="account-copy"><strong>{user.name}</strong><small>{user.email}</small></div>
-              <button className="logout-button" onClick={logout}>Abmelden</button>
-            </div>
+            <details className="account-menu">
+              <summary className="account-trigger" aria-label="Google-Konto öffnen">
+                {user.picture ? <img src={user.picture} alt="" referrerPolicy="no-referrer" /> : <span className="account-initial">{user.name.charAt(0)}</span>}
+                <span className="account-trigger-copy">{user.name}</span>
+                <span className="account-chevron" aria-hidden="true">⌄</span>
+              </summary>
+              <div className="account-popover">
+                <div className="account-popover-user">
+                  <strong>{user.name}</strong>
+                  <small>{user.email}</small>
+                </div>
+                <button className="logout-button" onClick={logout}>Abmelden</button>
+              </div>
+            </details>
           ) : GOOGLE_CLIENT_ID ? (
             <div className="google-login-wrap">
               <div className="google-button" ref={googleButtonRef} aria-label="Mit Google anmelden" />

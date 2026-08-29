@@ -16,7 +16,7 @@ Die Anmeldung verwendet Google Identity Services im Browser. Der öffentliche OA
 
 Die Verarbeitung des Google-Credentials liegt in `src/auth/google.ts`. Nach erfolgreicher Google-Anmeldung wird das von Google gelieferte ID-Credential nur für die aktuelle Browser-Sitzung in `sessionStorage` gehalten. Die Galerie wird nur bei einer gültigen, noch nicht abgelaufenen Sitzung gerendert. Logout entfernt diese Sitzung wieder.
 
-An- und Abmeldung sind zentral im Header untergebracht. Im ausgeloggten Zustand rendert Google Identity Services dort den Google-Anmeldebutton. Im eingeloggten Zustand werden das Google-Profilbild beziehungsweise eine Initiale sowie die Abmeldeaktion angezeigt. Der geschützte Galerie-Bereich enthält keine zweite Login- oder Logout-Steuerung.
+An- und Abmeldung sind zentral im Header untergebracht. Im ausgeloggten Zustand rendert Google Identity Services dort den Google-Anmeldebutton. Im eingeloggten Zustand wird das Google-Profil als kompakter Konto-Button dargestellt. Das native `details`/`summary`-Kontomenü zeigt Name, E-Mail-Adresse und die Abmeldeaktion und bleibt dadurch auch auf schmalen Displays erreichbar. Der geschützte Galerie-Bereich enthält keine zweite Login- oder Logout-Steuerung.
 
 Diese UI-Sperre ersetzt keine Datenberechtigung. Sobald Google Sheets und Google Drive angebunden werden, müssen die tatsächlichen Lese- und Schreibrechte weiterhin über Google OAuth und die Freigaben der jeweiligen Ressourcen durchgesetzt werden.
 
