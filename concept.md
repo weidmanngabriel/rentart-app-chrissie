@@ -23,4 +23,6 @@ Für den Proof of Concept gibt es nur feste, bekannte und vertrauenswürdige Goo
 
 Ein verfügbares Werk kann angefragt werden. Der Künstler kann die Anfrage annehmen oder ablehnen. Eine noch offene Anfrage kann vom Kunden zurückgezogen werden. Nach Annahme gilt das Werk als reserviert. Sobald der Künstler die Rückgabe bestätigt, ist das Werk wieder verfügbar.
 
+Ein reserviertes Werk darf vom Künstler auch direkt gelöscht werden. Die Anwendung beendet dabei die aktive Reservierung automatisch und löscht anschließend das Werk; ein vorheriger manueller Wechsel auf `verfügbar` ist nicht nötig.
+
 Die visuellen Abläufe sind unter [`docs/use-cases/`](docs/use-cases/README.md) dokumentiert.
