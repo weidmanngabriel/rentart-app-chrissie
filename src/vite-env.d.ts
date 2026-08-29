@@ -24,10 +24,33 @@ type GoogleAccountsId = {
   disableAutoSelect: () => void
 }
 
+type GoogleTokenResponse = {
+  access_token?: string
+  expires_in?: number
+  scope?: string
+  token_type?: string
+  error?: string
+  error_description?: string
+}
+
+type GoogleTokenClient = {
+  requestAccessToken: (config?: { prompt?: string }) => void
+}
+
+type GoogleAccountsOAuth2 = {
+  initTokenClient: (config: {
+    client_id: string
+    scope: string
+    callback: (response: GoogleTokenResponse) => void
+    error_callback?: (error: { type?: string }) => void
+  }) => GoogleTokenClient
+}
+
 interface Window {
   google?: {
     accounts: {
       id: GoogleAccountsId
+      oauth2?: GoogleAccountsOAuth2
     }
   }
 }
