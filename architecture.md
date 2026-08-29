@@ -12,6 +12,10 @@ RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der
 
 `src/App.tsx` unterscheidet über den URL-Hash zwischen der normalen Startansicht und der Unterseite `#dokumente`. Damit bleibt die Anwendung ohne zusätzliche Routing-Library klein und funktioniert weiterhin vollständig als statische GitHub-Pages-App. Die normale Navigation kann aus der Dokumentenansicht zurück zu Galerie, Ablauf und Story wechseln.
 
+Innerhalb des geschützten fachlichen Bereichs übernimmt `src/gallery/Gallery.tsx` eine zweite, bewusst kleine Navigation ohne zusätzliche Routing-Library. Der Zustand bleibt lokal in React und wechselt zwischen `Kunstwerke`, `Favoriten`, dem rollenabhängigen Bereich `Meine Kunstwerke` bzw. `Meine Anfragen` und `Mein Profil`. Dadurch müssen die vorhandenen Google-Daten nicht mehrfach geladen werden; alle Bereiche verwenden denselben bereits geladenen `DatabaseSnapshot`.
+
+Favoriten sind im PoC bewusst kein neuer Sheets-Tab. Die Artwork-IDs werden pro Google-E-Mail-Adresse unter einem eigenen `localStorage`-Schlüssel gespeichert. Das hält die Funktion klein und schnell testbar, bedeutet aber auch, dass Favoriten nicht geräteübergreifend synchronisiert werden.
+
 `src/docs/DocsPage.tsx` bündelt ausschließlich fachliche Markdown-Dateien mit Vites `?raw`-Importen direkt in den Produktionsbuild. Angezeigt werden `concept.md` und die derzeit vorhandenen Dateien unter `docs/use-cases/`; interne Arbeits- und Technikdokumente wie `agents.md` und `architecture.md` werden nicht in der App angeboten. Die Dokumentenansicht benötigt zur Laufzeit weder GitHub- noch Google-Zugriff und zeigt den Stand des jeweiligen Builds.
 
 `src/docs/MarkdownDocument.tsx` rendert die benötigten Markdown-Strukturen direkt als React-Elemente. Unterstützt werden Überschriften, Absätze, nummerierte und unnummerierte Listen, Hervorhebungen, Inline-Code, Links und Codeblöcke. Relative Links zwischen den fachlichen Markdown-Dateien werden innerhalb der Dokumentenansicht auf das passende Dokument umgeleitet.
@@ -63,7 +67,7 @@ Für leere Checkbox-Spalten im Sheet dürfen keine vorbefüllten `FALSE`-Werte �
 
 Bilder werden per Drive-API in `Images` hochgeladen. Das Sheet speichert nur die Drive-Datei-ID. Für die Darstellung lädt der Browser die Bilddatei authentifiziert und erzeugt lokal eine temporäre Object-URL.
 
-Die fachliche Oberfläche liegt in `src/gallery/Gallery.tsx`: Künstler können Werke anlegen, bearbeiten und löschen sowie Anfragen annehmen, ablehnen und Rückgaben bestätigen. Kunden können verfügbare Werke anfragen und eigene offene Anfragen zurückziehen.
+Die fachliche Oberfläche liegt in `src/gallery/Gallery.tsx`: Künstler können Werke anlegen, bearbeiten und löschen sowie Anfragen annehmen, ablehnen und Rückgaben bestätigen. Kunden können verfügbare Werke anfragen und eigene offene Anfragen zurückziehen. Dieselbe Komponente trennt diese Funktionen inzwischen in eigene sichtbare Bereiche und zeigt die gespeicherten Favoriten sowie das einfache Profil an.
 
 Die fachlichen Abläufe und Zustandswechsel werden zusätzlich als Mermaid-Diagramme unter `docs/use-cases/` dokumentiert.
 
