@@ -54,10 +54,9 @@ export function requestGoogleAccessToken(clientId: string, loginHint?: string) {
   })
 }
 
-function readAccessMap(): StoredGoogleAccessMap {
+function parseAccessMap(raw: string | null): StoredGoogleAccessMap {
+  if (!raw) return {}
   try {
-    const raw = sessionStorage.getItem(GOOGLE_ACCESS_SESSION_KEY)
-    if (!raw) return {}
     const value = JSON.parse(raw) as StoredGoogleAccessMap | StoredGoogleAccess | null
     if (!value || typeof value !== 'object') return {}
     if ('accessToken' in value && 'email' in value) {
@@ -70,9 +69,23 @@ function readAccessMap(): StoredGoogleAccessMap {
   }
 }
 
+function readAccessMap(): StoredGoogleAccessMap {
+  const persistent = parseAccessMap(localStorage.getItem(GOOGLE_ACCESS_SESSION_KEY))
+  if (Object.keys(persistent).length) return persistent
+
+  // Migrate still-valid tokens from the former session-only storage once.
+  const session = parseAccessMap(sessionStorage.getItem(GOOGLE_ACCESS_SESSION_KEY))
+  if (Object.keys(session).length) {
+    localStorage.setItem(GOOGLE_ACCESS_SESSION_KEY, JSON.stringify(session))
+    sessionStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
+  }
+  return session
+}
+
 function writeAccessMap(value: StoredGoogleAccessMap) {
-  if (Object.keys(value).length) sessionStorage.setItem(GOOGLE_ACCESS_SESSION_KEY, JSON.stringify(value))
-  else sessionStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
+  if (Object.keys(value).length) localStorage.setItem(GOOGLE_ACCESS_SESSION_KEY, JSON.stringify(value))
+  else localStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
+  sessionStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
 }
 
 export function storeGoogleAccessSession(accessToken: string, email: string, expiresInSeconds: number) {
@@ -100,6 +113,7 @@ export function readGoogleAccessSession(email: string) {
 
 export function clearGoogleAccessSession(email?: string) {
   if (!email) {
+    localStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
     sessionStorage.removeItem(GOOGLE_ACCESS_SESSION_KEY)
     return
   }
