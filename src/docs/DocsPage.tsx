@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import agentsDocument from '../../agents.md?raw'
-import architectureDocument from '../../architecture.md?raw'
 import conceptDocument from '../../concept.md?raw'
 import useCasesIndex from '../../docs/use-cases/README.md?raw'
 import artworkManagement from '../../docs/use-cases/artwork-management.md?raw'
 import reservationFlow from '../../docs/use-cases/reservation-flow.md?raw'
 import systemOverview from '../../docs/use-cases/system-overview.md?raw'
+import MarkdownDocument from './MarkdownDocument'
 
 type ProjectDocument = {
   id: string
@@ -22,20 +21,6 @@ const documents: ProjectDocument[] = [
     path: 'concept.md',
     description: 'Produktidee, Rollen und fachliche Abläufe.',
     content: conceptDocument,
-  },
-  {
-    id: 'architecture',
-    title: 'Architektur',
-    path: 'architecture.md',
-    description: 'Technischer Aufbau, Google-Anbindung und Deployment.',
-    content: architectureDocument,
-  },
-  {
-    id: 'agents',
-    title: 'Agent-Regeln',
-    path: 'agents.md',
-    description: 'Verbindliche Regeln für die Weiterentwicklung.',
-    content: agentsDocument,
   },
   {
     id: 'use-cases',
@@ -71,12 +56,18 @@ function DocsPage() {
   const [selectedId, setSelectedId] = useState(documents[0].id)
   const selected = documents.find((document) => document.id === selectedId) ?? documents[0]
 
+  const openDocumentLink = (href: string) => {
+    const fileName = href.split('/').pop()
+    const target = documents.find((document) => fileName && document.path.endsWith(fileName))
+    if (target) setSelectedId(target.id)
+  }
+
   return (
     <section className="documentation-page" aria-labelledby="documentation-title">
       <div className="documentation-heading">
-        <p className="eyebrow">Projektwissen</p>
+        <p className="eyebrow">Fachliche Dokumentation</p>
         <h1 id="documentation-title">RentArt<br /><em>Dokumente.</em></h1>
-        <p>Hier findest du die zentralen Projektdateien direkt in der App. Der Inhalt entspricht dem Stand, mit dem die App gebaut wurde.</p>
+        <p>Hier findest du Konzept und fachliche Abläufe direkt in der App. Der Inhalt entspricht dem Stand, mit dem die App gebaut wurde.</p>
       </div>
 
       <div className="documentation-layout">
@@ -99,9 +90,8 @@ function DocsPage() {
               <p className="eyebrow">{selected.path}</p>
               <h2>{selected.title}</h2>
             </div>
-            <span className="documentation-badge">Markdown</span>
           </header>
-          <pre className="documentation-source">{selected.content}</pre>
+          <MarkdownDocument source={selected.content} onDocumentLink={openDocumentLink} />
         </article>
       </div>
     </section>

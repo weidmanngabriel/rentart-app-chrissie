@@ -12,7 +12,9 @@ RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der
 
 `src/App.tsx` unterscheidet über den URL-Hash zwischen der normalen Startansicht und der Unterseite `#dokumente`. Damit bleibt die Anwendung ohne zusätzliche Routing-Library klein und funktioniert weiterhin vollständig als statische GitHub-Pages-App. Die normale Navigation kann aus der Dokumentenansicht zurück zu Galerie, Ablauf und Story wechseln.
 
-`src/docs/DocsPage.tsx` bündelt die zentralen Markdown-Dateien mit Vites `?raw`-Importen direkt in den Produktionsbuild. Angezeigt werden `concept.md`, `architecture.md`, `agents.md` sowie die derzeit vorhandenen Dateien unter `docs/use-cases/`. Die Dokumentenansicht benötigt deshalb zur Laufzeit weder GitHub- noch Google-Zugriff; sie zeigt den Stand des jeweiligen Builds. Die Inhalte werden bewusst als lesbarer Markdown-Quelltext dargestellt, sodass auch Mermaid-Blöcke und technische Details vollständig sichtbar bleiben.
+`src/docs/DocsPage.tsx` bündelt ausschließlich fachliche Markdown-Dateien mit Vites `?raw`-Importen direkt in den Produktionsbuild. Angezeigt werden `concept.md` und die derzeit vorhandenen Dateien unter `docs/use-cases/`; interne Arbeits- und Technikdokumente wie `agents.md` und `architecture.md` werden nicht in der App angeboten. Die Dokumentenansicht benötigt zur Laufzeit weder GitHub- noch Google-Zugriff und zeigt den Stand des jeweiligen Builds.
+
+`src/docs/MarkdownDocument.tsx` rendert die benötigten Markdown-Strukturen direkt als React-Elemente. Unterstützt werden Überschriften, Absätze, nummerierte und unnummerierte Listen, Hervorhebungen, Inline-Code, Links und Codeblöcke. Relative Links zwischen den fachlichen Markdown-Dateien werden innerhalb der Dokumentenansicht auf das passende Dokument umgeleitet. Mermaid-Blöcke bleiben als formatierte Diagramm-Quellblöcke sichtbar; dafür ist keine zusätzliche Laufzeitbibliothek nötig.
 
 ## Deployment
 
