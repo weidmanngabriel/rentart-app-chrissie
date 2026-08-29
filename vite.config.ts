@@ -4,30 +4,23 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/rentart-app-chrissie/',
-  build: {
-    rollupOptions: {
-      input: 'app.html'
-    }
-  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
-      workbox: {
-        mode: 'development'
-      },
       manifest: {
         name: 'RentArt',
         short_name: 'RentArt',
         description: 'Kunst, die bleibt.',
+        lang: 'de',
         theme_color: '#f5f1e9',
         background_color: '#fbfaf7',
         display: 'standalone',
         icons: [
-          { src: '/rentart-app-chrissie/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }
-        ]
-      }
-    })
-  ]
+          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+        ],
+      },
+    }),
+  ],
 })

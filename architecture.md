@@ -2,9 +2,9 @@
 
 RentArt ist eine rein clientseitige React-Anwendung mit TypeScript und Vite. Der Einstieg liegt in `src/main.tsx`, die Oberfläche in `src/App.tsx`; globale Gestaltung liegt in `styles.css`.
 
-`app.html` ist der Vite-Entwicklungseinstieg. Der Build erzeugt daraus statische Dateien für GitHub Pages. Die GitHub-Action baut `dist` bei Änderungen auf `main` und veröffentlicht diesen Build über GitHub Pages.
+`index.html` ist der einzige Vite-Einstieg für Entwicklung und Produktionsbuild. Vite erzeugt daraus ausschließlich im Verzeichnis `dist` die statischen Dateien für GitHub Pages. Die GitHub-Action baut und veröffentlicht `dist` bei Änderungen auf `main`; erzeugte Dateien gehören nicht ins Repository.
 
-`vite-plugin-pwa` erzeugt Manifest und Service Worker. Die App benötigt kein eigenes Backend.
+`vite-plugin-pwa` erzeugt Manifest und Service Worker bei jedem Produktionsbuild. Die App benötigt kein eigenes Backend.
 
 ## Anmeldung
 
