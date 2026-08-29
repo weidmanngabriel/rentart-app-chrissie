@@ -36,25 +36,6 @@ function App() {
   const googleButtonRef = useRef<HTMLDivElement>(null)
   const addGoogleButtonRef = useRef<HTMLDivElement>(null)
 
-  const authorizeGoogleDataAccess = async (targetUser: GoogleUser) => {
-    if (!GOOGLE_CLIENT_ID) return
-    setAuthorizing(true)
-    setDataError(null)
-    try {
-      const { accessToken: token, expiresInSeconds } = await requestGoogleAccessToken(GOOGLE_CLIENT_ID, targetUser.email)
-      const identity = await readGoogleAccessIdentity(token)
-      if (identity.email !== targetUser.email.toLowerCase()) {
-        throw new Error(`Bitte wähle für den Datenzugriff dasselbe Google-Konto (${targetUser.email}).`)
-      }
-      storeGoogleAccessSession(token, identity.email, expiresInSeconds)
-      setAccessToken(token)
-    } catch (error) {
-      setDataError(error instanceof Error ? error.message : 'Google-Datenzugriff konnte nicht aktiviert werden.')
-    } finally {
-      setAuthorizing(false)
-    }
-  }
-
   useEffect(() => {
     const storedAccounts = readStoredGoogleAccounts()
     setAccounts(storedAccounts)
@@ -88,7 +69,9 @@ function App() {
           setAccessToken(null)
           setDatabase(null)
           setDataError(null)
-          void authorizeGoogleDataAccess(nextUser)
+          window.setTimeout(() => {
+            document.querySelector('#entdecken')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 0)
         },
       })
 
@@ -152,9 +135,23 @@ function App() {
     setMenuOpen(false)
   }
 
-  const activateDataAccess = () => {
-    if (!user) return
-    void authorizeGoogleDataAccess(user)
+  const activateDataAccess = async () => {
+    if (!GOOGLE_CLIENT_ID || !user) return
+    setAuthorizing(true)
+    setDataError(null)
+    try {
+      const { accessToken: token, expiresInSeconds } = await requestGoogleAccessToken(GOOGLE_CLIENT_ID, user.email)
+      const identity = await readGoogleAccessIdentity(token)
+      if (identity.email !== user.email.toLowerCase()) {
+        throw new Error(`Bitte wähle für den Datenzugriff dasselbe Google-Konto (${user.email}).`)
+      }
+      storeGoogleAccessSession(token, identity.email, expiresInSeconds)
+      setAccessToken(token)
+    } catch (error) {
+      setDataError(error instanceof Error ? error.message : 'Google-Datenzugriff konnte nicht aktiviert werden.')
+    } finally {
+      setAuthorizing(false)
+    }
   }
 
   const switchAccount = (nextUser: GoogleUser) => {
@@ -201,7 +198,7 @@ function App() {
         <div className="data-access-gate">
           <p className="eyebrow">Google Backend</p>
           <h3>Datenzugriff aktivieren</h3>
-          <p>Direkt nach dem Google-Login fordert RentArt automatisch die nötige Freigabe für Google Sheets und Drive an. Falls das Google-Fenster geschlossen oder vom Browser verhindert wurde, kannst du die Freigabe hier erneut starten.</p>
+          <p>Google verlangt für den Zugriff auf Sheets und Drive einen zweiten, ausdrücklich ausgelösten Schritt. RentArt bringt dich nach dem Login direkt hierher, damit du die Freigabe ohne Suchen starten kannst.</p>
           {dataError && <div className="data-message error" role="alert">{dataError}</div>}
           <button className="button button-primary" onClick={activateDataAccess} disabled={authorizing}>{authorizing ? 'Google wird geöffnet …' : 'Google-Daten freigeben'}</button>
         </div>
