@@ -4,9 +4,11 @@ RentArt ist eine Plattform für lokale Kunst. Nutzer können Werke entdecken, f�
 
 Die öffentliche Einstiegsseite erklärt RentArt. Die Galerie ist ein geschützter Bereich und wird erst nach Anmeldung mit einem Google-Konto angezeigt. Es gibt keine eigene Benutzerverwaltung und keine RentArt-Passwörter.
 
-Die Google-Anmeldung ist jederzeit im Header erreichbar. Ohne Anmeldung zeigt der Header den Google-Anmeldebutton. Nach der Anmeldung erscheint dort das Google-Profil als Konto-Button; ein Klick darauf öffnet ein kleines Kontomenü mit Name, E-Mail-Adresse und einer klar sichtbaren Abmeldeaktion.
+Die Google-Anmeldung ist jederzeit im Header erreichbar. Ohne Anmeldung zeigt der Header den Google-Anmeldebutton. Nach der Anmeldung erscheint dort das Google-Profil als Konto-Button. Das Kontomenü zeigt Name, E-Mail-Adresse und die fachliche Rolle des aktiven Kontos.
 
-Nach der Anmeldung wird für den Zugriff auf das Google-Backend zusätzlich ein kurzlebiger Google-API-Zugriff angefordert. Dabei muss derselbe Google-Account gewählt werden. Erst danach werden Rollen, Werke und Reservierungen aus dem Google Sheet geladen. Der freigegebene Datenzugriff bleibt innerhalb derselben Browser-Sitzung auch über Page Reloads bestehen, solange das Google-Token noch gültig ist; danach kann Google erneut eine Freigabe verlangen.
+Innerhalb einer Browser-Sitzung können mehrere Google-Konten zu RentArt hinzugefügt werden. Sie erscheinen im Kontomenü und können dort direkt gewechselt werden, ohne das bisherige Konto vorher abzumelden. Der aktive Account bestimmt vollständig die sichtbare Rolle, Galerie und erlaubten Aktionen. Beim Wechsel werden die fachlichen Daten für das gewählte Konto neu geladen. Ein einzelnes gespeichertes Konto kann über das Kontomenü wieder abgemeldet werden; andere hinzugefügte Konten bleiben dabei erhalten.
+
+Nach der Anmeldung wird für den Zugriff auf das Google-Backend zusätzlich ein kurzlebiger Google-API-Zugriff angefordert. Dabei muss derselbe Google-Account gewählt werden. Die API-Freigabe wird innerhalb der aktuellen Browser-Sitzung getrennt pro hinzugefügtem Account gehalten. Dadurch kann beim Wechsel zu einem bereits autorisierten Konto dessen noch gültiger Zugriff wiederverwendet werden. Abgelaufene Tokens müssen für das jeweilige Konto neu freigegeben werden.
 
 Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund öffentlich sichtbar. Im Galerie-Bereich wird nur ein Login-Hinweis angezeigt.
 
