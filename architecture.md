@@ -20,9 +20,17 @@ An- und Abmeldung sind zentral im Header untergebracht. Im ausgeloggten Zustand 
 
 Diese UI-Sperre ersetzt keine Datenberechtigung. Sobald Google Sheets und Google Drive angebunden werden, müssen die tatsächlichen Lese- und Schreibrechte weiterhin über Google OAuth und die Freigaben der jeweiligen Ressourcen durchgesetzt werden.
 
+## PoC-Vertrauensmodell
+
+Für den Proof of Concept gibt es nur feste, bekannte und vertrauenswürdige Google-Konten. Diese Konten erhalten die notwendigen Freigaben für die verwendeten Google-Ressourcen und greifen direkt aus dem Browser-Client darauf zu. Es wird bewusst keine zusätzliche Backend- oder Autorisierungsschicht eingeführt.
+
+Die fachlichen Rollen `Künstler` und `Kunde` bestimmen zunächst Oberfläche und erlaubte Abläufe in der Anwendung. Sie sind im PoC keine harte Sicherheitsgrenze gegenüber einem absichtlich manipulierten Client. Dieses vereinfachte Modell ist eine bewusste PoC-Entscheidung und muss vor einer Öffnung für nicht vertrauenswürdige Nutzer neu bewertet werden.
+
 ## Daten und Dateien
 
 Persistente fachliche Daten werden später direkt über Google Sheets gelesen und geschrieben. Bilder und andere Dateien liegen in Google Drive; Sheets enthält nur die notwendigen Referenzen. Für diese APIs wird die bestehende Google-Anmeldung um die passenden OAuth-Berechtigungen erweitert.
+
+Die fachlichen Abläufe und Zustandswechsel werden zusätzlich als Mermaid-Diagramme unter `docs/use-cases/` dokumentiert.
 
 ## Externe Google-Konfiguration
 
