@@ -98,32 +98,118 @@
   border-bottom: 1px solid rgba(20, 20, 18, .1);
 }
 
-.documentation-document h2 {
+.documentation-document > header h2 {
   margin: 4px 0 0;
   font-size: clamp(1.8rem, 4vw, 2.7rem);
   letter-spacing: -.04em;
 }
 
-.documentation-badge {
-  flex: none;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: #efede5;
-  font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+.markdown-document {
+  padding: clamp(22px, 4vw, 42px);
+  color: #292824;
 }
 
-.documentation-source {
+.markdown-document > :first-child {
+  margin-top: 0;
+}
+
+.markdown-document > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-document h1,
+.markdown-document h2,
+.markdown-document h3,
+.markdown-document h4 {
+  margin: 1.8em 0 .55em;
+  color: #171714;
+  line-height: 1.12;
+  letter-spacing: -.035em;
+}
+
+.markdown-document h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+}
+
+.markdown-document h2 {
+  padding-top: .25em;
+  font-size: clamp(1.45rem, 3.5vw, 2.15rem);
+  border-top: 1px solid rgba(20, 20, 18, .08);
+}
+
+.markdown-document h3 {
+  font-size: 1.25rem;
+}
+
+.markdown-document h4 {
+  font-size: 1rem;
+}
+
+.markdown-document p,
+.markdown-document li {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.markdown-document p {
+  margin: 0 0 1.15em;
+}
+
+.markdown-document ul,
+.markdown-document ol {
+  margin: 0 0 1.35em;
+  padding-left: 1.45em;
+}
+
+.markdown-document li + li {
+  margin-top: .45em;
+}
+
+.markdown-document a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.markdown-document code {
+  padding: .12em .38em;
+  border-radius: 5px;
+  background: #efede5;
+  font: 600 .88em/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.markdown-code {
+  margin: 1.5em 0;
+  overflow: hidden;
+  border: 1px solid rgba(20, 20, 18, .12);
+  border-radius: 14px;
+  background: #f6f4ed;
+}
+
+.markdown-code > span {
+  display: block;
+  padding: 9px 13px;
+  border-bottom: 1px solid rgba(20, 20, 18, .1);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #656158;
+}
+
+.markdown-code pre {
   margin: 0;
-  padding: 28px;
-  overflow: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font: 500 .9rem/1.7 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: #292824;
-  background: #fcfbf7;
+  padding: 18px;
+  overflow-x: auto;
+}
+
+.markdown-code code {
+  padding: 0;
+  background: transparent;
+  font-size: .84rem;
+  font-weight: 500;
+  white-space: pre;
 }
 
 @media (max-width: 820px) {
@@ -152,8 +238,7 @@
     padding: 20px;
   }
 
-  .documentation-source {
+  .markdown-document {
     padding: 20px;
-    font-size: .82rem;
   }
 }
