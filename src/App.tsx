@@ -15,9 +15,16 @@ import {
   storeGoogleAccessSession,
 } from './auth/googleAccess'
 import Gallery from './gallery/Gallery'
+import DocsPage from './docs/DocsPage'
 import { GoogleApiError, loadDatabase, type DatabaseSnapshot } from './data/googleData'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
+type AppPage = 'home' | 'documents'
+
+function getPageFromHash(): AppPage {
+  return window.location.hash === '#dokumente' ? 'documents' : 'home'
+}
 
 function Brand() {
   return <a className="brand" href="#top" aria-label="RentArt Startseite"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span><span>rent<span>art</span></span></a>
@@ -25,6 +32,7 @@ function Brand() {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [page, setPage] = useState<AppPage>(getPageFromHash)
   const [accounts, setAccounts] = useState<GoogleUser[]>([])
   const [user, setUser] = useState<GoogleUser | null>(null)
   const [googleReady, setGoogleReady] = useState(false)
@@ -35,6 +43,17 @@ function App() {
   const [authorizing, setAuthorizing] = useState(false)
   const googleButtonRef = useRef<HTMLDivElement>(null)
   const addGoogleButtonRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const nextPage = getPageFromHash()
+      setPage(nextPage)
+      setMenuOpen(false)
+      if (nextPage === 'documents') window.scrollTo({ top: 0 })
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   useEffect(() => {
     const storedAccounts = readStoredGoogleAccounts()
@@ -131,8 +150,22 @@ function App() {
   }, [database, user])
 
   const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
+    const scroll = () => document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
+    if (page === 'documents') {
+      window.location.hash = 'top'
+      setPage('home')
+      window.setTimeout(scroll, 0)
+    } else {
+      scroll()
+    }
     setMenuOpen(false)
+  }
+
+  const openDocuments = () => {
+    window.location.hash = 'dokumente'
+    setPage('documents')
+    setMenuOpen(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const activateDataAccess = async () => {
@@ -243,6 +276,7 @@ function App() {
           <button onClick={() => scrollTo('#entdecken')}>Galerie</button>
           <button onClick={() => scrollTo('#so-funktionierts')}>So funktioniert's</button>
           <button onClick={() => scrollTo('#story')}>Unsere Idee</button>
+          <button onClick={openDocuments}>Dokumente</button>
         </nav>
         <div className="header-auth">
           {user ? (
@@ -294,39 +328,45 @@ function App() {
       </header>
 
       <main>
-        <section className="hero">
-          <div className="hero-copy">
-            <p className="eyebrow"><span className="eyebrow-dot" /> Kunst neu gedacht</p>
-            <h1>Räume, die<br /><em>etwas erzählen.</em></h1>
-            <p className="hero-text">Entdecke Kunst, die zu dir passt. Miete besondere Werke von lokalen Künstlern — flexibel, fair und ohne Risiko.</p>
-            <div className="hero-actions">
-              <button className="button button-primary" onClick={() => scrollTo('#entdecken')}>{user ? 'Galerie öffnen' : 'Zur Galerie'} <span>↗</span></button>
-              <button className="text-link" onClick={() => scrollTo('#so-funktionierts')}>Wie funktioniert's? <span>→</span></button>
-            </div>
-            <div className="hero-proof">
-              <div className="avatar-stack" aria-hidden="true"><span>J</span><span>M</span><span>L</span><span>+</span></div>
-              <p><strong>240+</strong> Menschen haben<br />ihre Wände neu entdeckt.</p>
-            </div>
-          </div>
-          <div className="hero-art" aria-label="Abstrakte Kunstcollage">
-            <div className="art-shadow" />
-            <div className="art-card art-card-main"><div className="art-shape art-circle" /><div className="art-shape art-arch" /><div className="art-shape art-line" /><span className="art-signature">No. 014 / 2024</span></div>
-            <div className="art-card art-card-side"><div className="side-sun" /><div className="side-horizon" /><div className="side-mountain" /></div>
-            <div className="art-label">curated<br /><strong>locally</strong></div>
-            <span className="floating-note">Kunst für<br /><em>dein Jetzt</em> ↗</span>
-          </div>
-        </section>
+        {page === 'documents' ? (
+          <DocsPage />
+        ) : (
+          <>
+            <section className="hero">
+              <div className="hero-copy">
+                <p className="eyebrow"><span className="eyebrow-dot" /> Kunst neu gedacht</p>
+                <h1>Räume, die<br /><em>etwas erzählen.</em></h1>
+                <p className="hero-text">Entdecke Kunst, die zu dir passt. Miete besondere Werke von lokalen Künstlern — flexibel, fair und ohne Risiko.</p>
+                <div className="hero-actions">
+                  <button className="button button-primary" onClick={() => scrollTo('#entdecken')}>{user ? 'Galerie öffnen' : 'Zur Galerie'} <span>↗</span></button>
+                  <button className="text-link" onClick={() => scrollTo('#so-funktionierts')}>Wie funktioniert's? <span>→</span></button>
+                </div>
+                <div className="hero-proof">
+                  <div className="avatar-stack" aria-hidden="true"><span>J</span><span>M</span><span>L</span><span>+</span></div>
+                  <p><strong>240+</strong> Menschen haben<br />ihre Wände neu entdeckt.</p>
+                </div>
+              </div>
+              <div className="hero-art" aria-label="Abstrakte Kunstcollage">
+                <div className="art-shadow" />
+                <div className="art-card art-card-main"><div className="art-shape art-circle" /><div className="art-shape art-arch" /><div className="art-shape art-line" /><span className="art-signature">No. 014 / 2024</span></div>
+                <div className="art-card art-card-side"><div className="side-sun" /><div className="side-horizon" /><div className="side-mountain" /></div>
+                <div className="art-label">curated<br /><strong>locally</strong></div>
+                <span className="floating-note">Kunst für<br /><em>dein Jetzt</em> ↗</span>
+              </div>
+            </section>
 
-        <section className="marquee" aria-label="RentArt Werte"><div className="marquee-track"><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span><b>✳</b><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span></div></section>
+            <section className="marquee" aria-label="RentArt Werte"><div className="marquee-track"><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span><b>✳</b><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span></div></section>
 
-        <section className="discover section-wrap" id="entdecken">{renderGallery()}</section>
+            <section className="discover section-wrap" id="entdecken">{renderGallery()}</section>
 
-        <section className="how section-wrap" id="so-funktionierts">
-          <div className="how-visual"><div className="how-number">01</div><div className="how-poster"><span>MAKE<br /><em>SPACE</em><br />FOR ART</span><small>RENTART / 001</small></div><div className="scribble">easy does it <span>↗</span></div></div>
-          <div className="how-copy"><p className="eyebrow">So einfach geht's</p><h2>Kunst darf sich<br /><em>leicht anfühlen.</em></h2><div className="steps"><div className="step"><b>01</b><div><h3>Finde dein Werk</h3><p>Melde dich an und stöbere durch unsere Auswahl.</p></div></div><div className="step"><b>02</b><div><h3>Frage es an</h3><p>Schicke dem Künstler eine Reservierungsanfrage direkt aus der Galerie.</p></div></div><div className="step"><b>03</b><div><h3>Wechsel, wenn du willst</h3><p>Nach der Rückgabe wird das Werk wieder für andere verfügbar.</p></div></div></div></div>
-        </section>
+            <section className="how section-wrap" id="so-funktionierts">
+              <div className="how-visual"><div className="how-number">01</div><div className="how-poster"><span>MAKE<br /><em>SPACE</em><br />FOR ART</span><small>RENTART / 001</small></div><div className="scribble">easy does it <span>↗</span></div></div>
+              <div className="how-copy"><p className="eyebrow">So einfach geht's</p><h2>Kunst darf sich<br /><em>leicht anfühlen.</em></h2><div className="steps"><div className="step"><b>01</b><div><h3>Finde dein Werk</h3><p>Melde dich an und stöbere durch unsere Auswahl.</p></div></div><div className="step"><b>02</b><div><h3>Frage es an</h3><p>Schicke dem Künstler eine Reservierungsanfrage direkt aus der Galerie.</p></div></div><div className="step"><b>03</b><div><h3>Wechsel, wenn du willst</h3><p>Nach der Rückgabe wird das Werk wieder für andere verfügbar.</p></div></div></div></div>
+            </section>
 
-        <section className="story section-wrap" id="story"><p className="eyebrow">Warum RentArt?</p><h2>Mehr als ein Bild.<br /><em>Ein Gefühl für Räume.</em></h2><p className="story-text">Wir glauben, dass Kunst nicht hinter Glas warten sollte. Sie soll bei dir sein — im Alltag, im Wandel, genau dort, wo Leben passiert.</p><a className="text-link" href="mailto:hallo@rentart.de">Lern uns kennen <span>→</span></a></section>
+            <section className="story section-wrap" id="story"><p className="eyebrow">Warum RentArt?</p><h2>Mehr als ein Bild.<br /><em>Ein Gefühl für Räume.</em></h2><p className="story-text">Wir glauben, dass Kunst nicht hinter Glas warten sollte. Sie soll bei dir sein — im Alltag, im Wandel, genau dort, wo Leben passiert.</p><a className="text-link" href="mailto:hallo@rentart.de">Lern uns kennen <span>→</span></a></section>
+          </>
+        )}
       </main>
       <footer className="site-footer"><Brand /><p>© 2026 RentArt. Kunst für dein Jetzt.</p><div><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a><a href="mailto:hallo@rentart.de">Kontakt</a></div></footer>
     </div>
