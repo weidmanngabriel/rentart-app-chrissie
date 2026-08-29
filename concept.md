@@ -20,11 +20,11 @@ Ein noch gültiger API-Zugriff wird zusammen mit seiner Ablaufzeit lokal auf dem
 
 Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund öffentlich sichtbar. Im Galerie-Bereich wird nur ein Login-Hinweis angezeigt.
 
-## Projektdokumente in der App
+## Fachliche Dokumente in der App
 
-Über den Menüpunkt `Dokumente` ist eine eigene Unterseite erreichbar, auf der die zentralen Projektdokumente direkt in RentArt gelesen werden können. Dazu gehören `concept.md`, `architecture.md`, `agents.md` sowie die vorhandenen Dokumente unter `docs/use-cases/`.
+Über den Menüpunkt `Dokumente` ist eine eigene Unterseite erreichbar, auf der ausschließlich fachliche Projektdokumentation direkt in RentArt gelesen werden kann. Angezeigt werden `concept.md` sowie die vorhandenen Dokumente unter `docs/use-cases/`. Technische und interne Arbeitsdokumente wie `architecture.md` und `agents.md` gehören nicht in diese Ansicht.
 
-Die Dokumentenseite ist öffentlich erreichbar und benötigt weder Google-Login noch Google-Datenfreigabe. Sie dient vor allem dazu, Konzept, Architektur und Abläufe beim Testen der PWA schnell auf dem aktuellen Gerät einsehen zu können. Angezeigt wird immer der Dokumentationsstand, der beim jeweiligen App-Build im Repository vorhanden war.
+Die Markdown-Inhalte werden als formatierte Dokumente dargestellt, also unter anderem mit Überschriften, Listen, Hervorhebungen, Links und Codeblöcken. Die Dokumentenseite ist öffentlich erreichbar und benötigt weder Google-Login noch Google-Datenfreigabe. Angezeigt wird immer der Dokumentationsstand, der beim jeweiligen App-Build im Repository vorhanden war.
 
 ## Pull-to-Refresh in der installierten App
 
