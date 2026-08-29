@@ -14,15 +14,17 @@ GitHub Pages verwendet **GitHub Actions** als Veröffentlichungsquelle. Der Work
 
 Die Anmeldung verwendet Google Identity Services im Browser. Der öffentliche OAuth-Web-Client wird über `VITE_GOOGLE_CLIENT_ID` konfiguriert. Für den GitHub-Pages-Build liest die Action den Wert aus der Repository-Variable `GOOGLE_CLIENT_ID`. Die Client-ID ist kein Secret; ein Client-Secret darf nicht im Frontend oder Repository liegen.
 
-Die Verarbeitung des Google-ID-Credentials liegt in `src/auth/google.ts`. Nach erfolgreicher Google-Anmeldung wird dieses Credential nur für die aktuelle Browser-Sitzung in `sessionStorage` gehalten. Logout entfernt diese Sitzung wieder.
+Die Verarbeitung der Google-ID-Credentials liegt in `src/auth/google.ts`. Für die aktuelle Browser-Sitzung können mehrere Google-Konten gespeichert werden. Dafür werden die einzelnen ID-Credentials ausschließlich in `sessionStorage` gehalten; zusätzlich wird dort die E-Mail-Adresse des aktuell aktiven Accounts gespeichert. Beim Start werden abgelaufene Credentials verworfen. Ein früheres einzelnes Login unter dem alten Session-Key wird automatisch in die neue Account-Liste übernommen.
 
-Anmeldung und API-Zugriff sind getrennt: `src/auth/googleAccess.ts` verwendet `google.accounts.oauth2.initTokenClient`, um ein kurzlebiges Access Token für Google Sheets und Google Drive anzufordern. Vor dem Zugriff auf die Fachdaten wird über Google UserInfo geprüft, dass der für die APIs autorisierte Account dieselbe E-Mail-Adresse wie der angemeldete Account besitzt.
+Der aktive Google-Account wird im Header gewählt. Ein Wechsel ändert nur den aktiven Account und löscht die anderen gespeicherten Konten nicht. `src/App.tsx` setzt beim Wechsel das aktuell geladene Backend-Snapshot zurück und lädt Rolle, Galerie und Reservierungen für den neuen Account neu.
 
-Das kurzlebige Access Token wird zusammen mit E-Mail und Ablaufzeit ebenfalls nur in `sessionStorage` gehalten. Dadurch übersteht der Google-Datenzugriff einen Page Reload innerhalb derselben Browser-Sitzung, solange das Token noch gültig ist. Bei Ablauf, Abmeldung oder Accountwechsel wird es entfernt und muss neu angefordert werden. Es wird nicht dauerhaft in `localStorage` gespeichert.
+Anmeldung und API-Zugriff sind getrennt: `src/auth/googleAccess.ts` verwendet `google.accounts.oauth2.initTokenClient`, um kurzlebige Access Tokens für Google Sheets und Google Drive anzufordern. Vor dem Zugriff auf die Fachdaten wird über Google UserInfo geprüft, dass der für die APIs autorisierte Account dieselbe E-Mail-Adresse wie der aktive Login besitzt.
+
+Die kurzlebigen Access Tokens werden ebenfalls nur in `sessionStorage` gespeichert, allerdings getrennt nach Google-E-Mail-Adresse. Dadurch kann beim Wechsel zu einem bereits autorisierten Account dessen noch gültiger Token wiederverwendet werden. Ein abgelaufener oder ungültiger Token wird nur für das betroffene Konto entfernt. Das Abmelden eines einzelnen Kontos entfernt dessen Login und API-Token, lässt andere gespeicherte Konten aber bestehen.
 
 Der PoC fordert die Scopes `openid`, `email`, `profile`, `https://www.googleapis.com/auth/spreadsheets` und `https://www.googleapis.com/auth/drive` an. Für die festen Testkonten müssen Google Sheets API und Google Drive API im Google-Cloud-Projekt aktiviert und die Konten bei Bedarf als OAuth-Testnutzer hinterlegt sein.
 
-An- und Abmeldung sind zentral im Header untergebracht. Im ausgeloggten Zustand rendert Google Identity Services dort den Google-Anmeldebutton. Im eingeloggten Zustand wird das Google-Profil als kompakter Konto-Button dargestellt. Die fachliche Rolle wird nach erfolgreichem Datenzugriff zusätzlich aus dem Sheet geladen.
+An- und Abmeldung sind zentral im Header untergebracht. Im ausgeloggten Zustand rendert Google Identity Services dort den Google-Anmeldebutton. Im eingeloggten Zustand wird das aktive Google-Profil als kompakter Konto-Button dargestellt. Das Kontomenü enthält alle für die Browser-Sitzung hinzugefügten Accounts, einen direkten Accountwechsel, einen Google-Button zum Hinzufügen weiterer Konten und die Abmeldung des aktiven Kontos. Die fachliche Rolle des aktiven Kontos wird nach erfolgreichem Datenzugriff zusätzlich aus dem Sheet geladen.
 
 ## PoC-Vertrauensmodell
 
@@ -39,7 +41,7 @@ Die Google-Ressourcen sind fest für den PoC konfiguriert:
 
 `src/data/googleData.ts` kapselt die REST-Zugriffe auf Google Sheets und Drive. Das Sheet besteht aus drei Tabs:
 
-- `Users`: `email`, `role`, `active`, `display_name`. Die E-Mail wird mit dem Google-Login abgeglichen; `role` ist `artist` oder `customer` und `active` muss TRUE sein.
+- `Users`: `email`, `role`, `active`, `display_name`. Die E-Mail wird mit dem aktiven Google-Login abgeglichen; `role` ist `artist` oder `customer` und `active` muss TRUE sein.
 - `Artworks`: Stammdaten eines Werks sowie die `image_file_id` aus Drive.
 - `Reservations`: Anfrage- und Reservierungsverlauf mit `requested`, `active`, `cancelled` oder `returned`.
 
