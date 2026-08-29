@@ -63,11 +63,11 @@ function App() {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         type: 'standard',
         theme: 'outline',
-        size: 'large',
+        size: 'medium',
         shape: 'pill',
         text: 'signin_with',
         locale: 'de',
-        width: 260,
+        width: 205,
       })
       setGoogleReady(true)
       return true
@@ -101,15 +101,22 @@ function App() {
           <button onClick={() => scrollTo('#so-funktionierts')}>So funktioniert's</button>
           <button onClick={() => scrollTo('#story')}>Unsere Idee</button>
         </nav>
-        {user ? (
-          <div className="account-chip">
-            {user.picture ? <img src={user.picture} alt="" referrerPolicy="no-referrer" /> : <span>{user.name.charAt(0)}</span>}
-            <div><strong>{user.name}</strong><small>{user.email}</small></div>
-            <button onClick={logout}>Abmelden</button>
-          </div>
-        ) : (
-          <button className="button button-small button-outline desktop-cta" onClick={() => scrollTo('#entdecken')}>Anmelden <span>↗</span></button>
-        )}
+        <div className="header-auth">
+          {user ? (
+            <div className="account-chip">
+              {user.picture ? <img src={user.picture} alt="" referrerPolicy="no-referrer" /> : <span className="account-initial">{user.name.charAt(0)}</span>}
+              <div className="account-copy"><strong>{user.name}</strong><small>{user.email}</small></div>
+              <button className="logout-button" onClick={logout}>Abmelden</button>
+            </div>
+          ) : GOOGLE_CLIENT_ID ? (
+            <div className="google-login-wrap">
+              <div className="google-button" ref={googleButtonRef} aria-label="Mit Google anmelden" />
+              {!googleReady && <span className="google-loading" aria-hidden="true" />}
+            </div>
+          ) : (
+            <span className="login-unavailable">Login nicht konfiguriert</span>
+          )}
+        </div>
         <button className="menu-toggle" aria-label="Menü öffnen" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
       </header>
 
@@ -143,7 +150,6 @@ function App() {
           {user ? (
             <>
               <div className="section-heading"><div><p className="eyebrow">Deine nächste Wand</p><h2>Etwas Schönes<br /><em>wartet auf dich.</em></h2></div><p className="section-intro">Eine kuratierte Auswahl von Künstlern aus deiner Nähe. Wechsel, was dich bewegt.</p></div>
-              <div className="gallery-session"><span>Angemeldet als {user.email}</span><button onClick={logout}>Abmelden</button></div>
               <div className="filter-row" role="group" aria-label="Kollektion filtern">{(['Alle Werke', 'Abstrakt', 'Fotografie', 'Grafik'] as Category[]).map((item) => <button key={item} className={`filter ${category === item ? 'active' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}</div>
               <div className="art-grid">{filteredArtworks.map((artwork) => <article className="work-card" key={artwork.title}><div className={`work-image ${artwork.visualClass}`}><span>{artwork.number}</span></div><div className="work-meta"><div><h3>{artwork.title}</h3><p>{artwork.artist} · {artwork.city}</p></div><strong>ab {artwork.price}<small>/ Monat</small></strong></div></article>)}</div>
               <button className="button button-dark centered" onClick={() => scrollTo('#story')}>Mehr über RentArt <span>↗</span></button>
@@ -154,15 +160,7 @@ function App() {
               <div className="login-gate-copy">
                 <p className="eyebrow">Galerie</p>
                 <h2>Deine Auswahl.<br /><em>Nur einen Login entfernt.</em></h2>
-                <p>Die Galerie ist nur für angemeldete Nutzer sichtbar. Melde dich mit deinem Google-Konto an, um die verfügbaren Werke zu sehen.</p>
-                {GOOGLE_CLIENT_ID ? (
-                  <>
-                    <div className="google-button" ref={googleButtonRef} aria-label="Mit Google anmelden" />
-                    {!googleReady && <small className="login-status">Google-Anmeldung wird geladen …</small>}
-                  </>
-                ) : (
-                  <div className="login-setup"><strong>Google Login ist vorbereitet.</strong><span>Für die Aktivierung fehlt noch die Google OAuth Client-ID.</span></div>
-                )}
+                <p>Die Galerie ist nur für angemeldete Nutzer sichtbar. Melde dich oben im Header mit deinem Google-Konto an, um die verfügbaren Werke zu sehen.</p>
                 <small className="privacy-note">Die Anmeldung läuft direkt über Google. RentArt speichert kein Passwort.</small>
               </div>
             </div>
