@@ -60,10 +60,15 @@
 }
 @media (max-width: 720px) {
   .backend-gallery-heading { display: grid; gap: 1.5rem; }
-  .app-area-nav { grid-template-columns: 1fr 1fr; gap: .6rem; }
-  .app-area-button { min-height: 84px; padding: .85rem; }
-  .app-area-button strong { font-size: .84rem; }
-  .app-area-button small { font-size: .7rem; }
+  .app-area-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 0; margin: 0; padding: .45rem .45rem calc(.45rem + env(safe-area-inset-bottom)); background: rgba(251,250,247,.96); border-top: 1px solid rgba(28,27,25,.14); box-shadow: 0 -8px 24px rgba(28,27,25,.08); backdrop-filter: blur(14px); }
+  .app-area-button { min-height: 58px; padding: .55rem .2rem; border: 0; border-radius: 12px; background: transparent; text-align: center; justify-items: center; gap: .1rem; }
+  .app-area-button:hover { transform: none; border-color: transparent; }
+  .app-area-button.is-active { background: #1c1b19; color: #fff; }
+  .app-area-button strong { font-size: .72rem; line-height: 1.15; }
+  .app-area-button small { display: none; }
+  .backend-gallery-heading { margin-top: 0; }
+  .backend-art-grid, .profile-panel, .backend-empty { margin-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .artwork-form { margin-bottom: calc(92px + env(safe-area-inset-bottom)); }
   .artwork-form-grid { grid-template-columns: 1fr; }
   .artwork-form-heading { flex-direction: column; }
   .reservation-note { flex-direction: column; gap: .2rem; }
