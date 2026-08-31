@@ -15,16 +15,19 @@ import {
   type Reservation,
 } from '../data/googleData'
 
+type Area = 'gallery' | 'favorites' | 'mine' | 'profile'
+
 type GalleryProps = {
   accessToken: string
   currentUser: BackendUser
   database: DatabaseSnapshot
+  area: Area
+  onAreaChange: (area: Area) => void
   onRefresh: () => Promise<void>
   onAccessExpired: () => void
 }
 
 type Draft = ArtworkInput & { image: File | null }
-type Area = 'gallery' | 'favorites' | 'mine' | 'profile'
 
 const EMPTY_DRAFT: Draft = {
   title: '',
@@ -88,8 +91,7 @@ function favoriteStorageKey(email: string) {
   return `rentart:favorites:${email.toLowerCase()}`
 }
 
-export default function Gallery({ accessToken, currentUser, database, onRefresh, onAccessExpired }: GalleryProps) {
-  const [area, setArea] = useState<Area>('gallery')
+export default function Gallery({ accessToken, currentUser, database, area, onAreaChange, onRefresh, onAccessExpired }: GalleryProps) {
   const [category, setCategory] = useState('Alle Werke')
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null)
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT)
@@ -316,13 +318,6 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
     )
   }
 
-  const areaItems: Array<{ id: Area; label: string; hint: string }> = [
-    { id: 'gallery', label: 'Kunstwerke', hint: 'Alle verfügbaren Werke entdecken' },
-    { id: 'favorites', label: 'Favoriten', hint: `${favoriteIds.length} gespeicherte Werke` },
-    { id: 'mine', label: isArtist ? 'Meine Kunstwerke' : 'Meine Anfragen', hint: isArtist ? 'Eigene Werke verwalten' : 'Offene Reservierungen ansehen' },
-    { id: 'profile', label: 'Mein Profil', hint: 'Konto und Rolle ansehen' },
-  ]
-
   const sectionTitle = area === 'favorites'
     ? <>Deine <em>Favoriten.</em></>
     : area === 'mine'
@@ -333,15 +328,6 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
 
   return (
     <>
-      <div className="app-area-nav" aria-label="RentArt Bereiche">
-        {areaItems.map((item) => (
-          <button key={item.id} className={`app-area-button ${area === item.id ? 'is-active' : ''}`} onClick={() => setArea(item.id)}>
-            <strong>{item.label}</strong>
-            <small>{item.hint}</small>
-          </button>
-        ))}
-      </div>
-
       <div className="section-heading backend-gallery-heading">
         <div>
           <p className="eyebrow">Dein RentArt Bereich</p>
@@ -396,7 +382,7 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
 
       {area === 'favorites' && (
         favoriteArtworks.length === 0 ? (
-          <div className="backend-empty"><p className="eyebrow">Favoriten</p><h3>Noch keine Favoriten.</h3><p>Tippe bei einem Kunstwerk auf das Herz. Deine Auswahl wird auf diesem Gerät gespeichert.</p><button className="button button-primary" onClick={() => setArea('gallery')}>Kunstwerke entdecken</button></div>
+          <div className="backend-empty"><p className="eyebrow">Favoriten</p><h3>Noch keine Favoriten.</h3><p>Tippe bei einem Kunstwerk auf das Herz. Deine Auswahl wird auf diesem Gerät gespeichert.</p><button className="button button-primary" onClick={() => onAreaChange('gallery')}>Kunstwerke entdecken</button></div>
         ) : <div className="art-grid backend-art-grid">{favoriteArtworks.map(renderArtworkCard)}</div>
       )}
 
@@ -406,7 +392,7 @@ export default function Gallery({ accessToken, currentUser, database, onRefresh,
             <div className="backend-empty"><p className="eyebrow">Meine Kunstwerke</p><h3>Noch keine eigenen Werke.</h3><p>Lege dein erstes Werk an. Bild und Daten werden direkt in Google Drive und Google Sheets gespeichert.</p><button className="button button-primary" onClick={openCreate}>Erstes Werk hinzufügen</button></div>
           ) : <div className="art-grid backend-art-grid">{ownArtworks.map(renderArtworkCard)}</div>
         ) : ownReservedArtworks.length === 0 ? (
-          <div className="backend-empty"><p className="eyebrow">Meine Anfragen</p><h3>Keine offenen Anfragen.</h3><p>Deine offenen oder angenommenen Reservierungen erscheinen hier.</p><button className="button button-primary" onClick={() => setArea('gallery')}>Kunstwerke entdecken</button></div>
+          <div className="backend-empty"><p className="eyebrow">Meine Anfragen</p><h3>Keine offenen Anfragen.</h3><p>Deine offenen oder angenommenen Reservierungen erscheinen hier.</p><button className="button button-primary" onClick={() => onAreaChange('gallery')}>Kunstwerke entdecken</button></div>
         ) : <div className="art-grid backend-art-grid">{ownReservedArtworks.map(renderArtworkCard)}</div>
       )}
     </>

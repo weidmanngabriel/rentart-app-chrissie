@@ -1,10 +1,11 @@
 .backend-gallery-heading { align-items: flex-start; margin-top: 2.5rem; }
-.app-area-nav { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .8rem; margin-bottom: 1rem; }
-.app-area-button { min-height: 94px; padding: 1rem 1.1rem; border: 1px solid rgba(28,27,25,.14); border-radius: 18px; background: rgba(255,255,255,.55); text-align: left; display: grid; align-content: center; gap: .35rem; transition: transform .18s ease, background .18s ease, border-color .18s ease; }
-.app-area-button:hover { transform: translateY(-2px); border-color: rgba(28,27,25,.32); }
-.app-area-button.is-active { background: #1c1b19; color: #fff; border-color: #1c1b19; }
-.app-area-button strong { font-size: .95rem; }
-.app-area-button small { opacity: .62; line-height: 1.35; }
+.has-app-area-nav { padding-bottom: 96px; }
+.app-area-nav { position: fixed; left: 50%; bottom: 1rem; z-index: 1000; width: min(760px,calc(100vw - 2rem)); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .35rem; margin: 0; padding: .45rem; border: 1px solid rgba(28,27,25,.14); border-radius: 20px; background: rgba(251,250,247,.96); box-shadow: 0 10px 34px rgba(28,27,25,.16); backdrop-filter: blur(16px); }
+.app-area-button { min-height: 58px; padding: .65rem .5rem; border: 0; border-radius: 14px; background: transparent; text-align: center; display: grid; place-items: center; font: inherit; color: inherit; cursor: pointer; transition: background .18s ease, color .18s ease; }
+.app-area-button:hover { background: rgba(28,27,25,.08); }
+.app-area-button.is-active { background: #1c1b19; color: #fff; }
+.app-area-button strong { font-size: .82rem; line-height: 1.15; }
+.app-area-button small { display: none; }
 .role-summary { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; min-width: 220px; }
 .role-summary small { opacity: .65; }
 .role-badge { display: inline-flex; align-items: center; min-height: 28px; padding: 0 .7rem; border-radius: 999px; font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; background: #ece6dc; }
@@ -55,20 +56,12 @@
 .data-access-gate .button { margin-top: .7rem; }
 .role-missing { padding: 2rem; border-radius: 24px; background: #eee8de; }
 .role-missing code { display: inline-block; margin: .7rem 0; padding: .2rem .45rem; background: rgba(255,255,255,.65); border-radius: 5px; }
-@media (max-width: 900px) {
-  .app-area-nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
-}
 @media (max-width: 720px) {
-  .backend-gallery-heading { display: grid; gap: 1.5rem; }
-  .app-area-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 0; margin: 0; padding: .45rem .45rem calc(.45rem + env(safe-area-inset-bottom)); background: rgba(251,250,247,.96); border-top: 1px solid rgba(28,27,25,.14); box-shadow: 0 -8px 24px rgba(28,27,25,.08); backdrop-filter: blur(14px); }
-  .app-area-button { min-height: 58px; padding: .55rem .2rem; border: 0; border-radius: 12px; background: transparent; text-align: center; justify-items: center; gap: .1rem; }
-  .app-area-button:hover { transform: none; border-color: transparent; }
-  .app-area-button.is-active { background: #1c1b19; color: #fff; }
-  .app-area-button strong { font-size: .72rem; line-height: 1.15; }
-  .app-area-button small { display: none; }
-  .backend-gallery-heading { margin-top: 0; }
-  .backend-art-grid, .profile-panel, .backend-empty { margin-bottom: calc(78px + env(safe-area-inset-bottom)); }
-  .artwork-form { margin-bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .has-app-area-nav { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .backend-gallery-heading { display: grid; gap: 1.5rem; margin-top: 0; }
+  .app-area-nav { left: 0; right: 0; bottom: 0; width: auto; transform: none; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 0; padding: .4rem .35rem calc(.4rem + env(safe-area-inset-bottom)); border: 0; border-top: 1px solid rgba(28,27,25,.14); border-radius: 0; box-shadow: 0 -8px 24px rgba(28,27,25,.08); }
+  .app-area-button { min-height: 58px; padding: .55rem .15rem; border-radius: 12px; }
+  .app-area-button strong { font-size: .7rem; }
   .artwork-form-grid { grid-template-columns: 1fr; }
   .artwork-form-heading { flex-direction: column; }
   .reservation-note { flex-direction: column; gap: .2rem; }

@@ -21,6 +21,7 @@ import { GoogleApiError, loadDatabase, type DatabaseSnapshot } from './data/goog
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 type AppPage = 'home' | 'documents'
+type AppArea = 'gallery' | 'favorites' | 'mine' | 'profile'
 
 function getPageFromHash(): AppPage {
   return window.location.hash === '#dokumente' ? 'documents' : 'home'
@@ -33,6 +34,7 @@ function Brand() {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [page, setPage] = useState<AppPage>(getPageFromHash)
+  const [area, setArea] = useState<AppArea>('gallery')
   const [accounts, setAccounts] = useState<GoogleUser[]>([])
   const [user, setUser] = useState<GoogleUser | null>(null)
   const [googleReady, setGoogleReady] = useState(false)
@@ -85,6 +87,7 @@ function App() {
           const nextAccounts = readStoredGoogleAccounts()
           setAccounts(nextAccounts)
           setUser(nextUser)
+          setArea('gallery')
           setAccessToken(null)
           setDatabase(null)
           setDataError(null)
@@ -161,6 +164,19 @@ function App() {
     setMenuOpen(false)
   }
 
+  const openArea = (nextArea: AppArea) => {
+    setArea(nextArea)
+    const open = () => document.querySelector('#entdecken')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (page === 'documents') {
+      window.location.hash = 'top'
+      setPage('home')
+      window.setTimeout(open, 0)
+    } else {
+      open()
+    }
+    setMenuOpen(false)
+  }
+
   const openDocuments = () => {
     window.location.hash = 'dokumente'
     setPage('documents')
@@ -191,6 +207,7 @@ function App() {
     if (nextUser.email.toLowerCase() === user?.email.toLowerCase()) return
     setActiveGoogleAccount(nextUser.email)
     setUser(nextUser)
+    setArea('gallery')
     setAccessToken(null)
     setDatabase(null)
     setDataError(null)
@@ -201,6 +218,7 @@ function App() {
     clearGoogleAccessSession(user.email)
     const { accounts: nextAccounts, active } = removeGoogleAccount(user.email)
     setAccounts(nextAccounts)
+    setArea('gallery')
     setAccessToken(null)
     setDatabase(null)
     setDataError(null)
@@ -258,6 +276,8 @@ function App() {
         accessToken={accessToken}
         currentUser={backendUser}
         database={database}
+        area={area}
+        onAreaChange={setArea}
         onRefresh={refreshDatabase}
         onAccessExpired={() => {
           clearGoogleAccessSession(user.email)
@@ -268,8 +288,17 @@ function App() {
     )
   }
 
+  const areaItems: Array<{ id: AppArea; label: string }> = [
+    { id: 'gallery', label: 'Entdecken' },
+    { id: 'favorites', label: 'Favoriten' },
+    { id: 'mine', label: backendUser?.role === 'artist' ? 'Meine Kunstwerke' : 'Meine Anfragen' },
+    { id: 'profile', label: 'Profil' },
+  ]
+
+  const showAreaNav = Boolean(user && accessToken && backendUser?.active && backendUser.role)
+
   return (
-    <div id="top">
+    <div id="top" className={showAreaNav ? 'has-app-area-nav' : ''}>
       <header className="site-header">
         <Brand />
         <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Hauptnavigation">
@@ -368,6 +397,17 @@ function App() {
           </>
         )}
       </main>
+
+      {showAreaNav && (
+        <nav className="app-area-nav" aria-label="Persönliche Bereiche">
+          {areaItems.map((item) => (
+            <button key={item.id} className={`app-area-button ${area === item.id ? 'is-active' : ''}`} onClick={() => openArea(item.id)}>
+              <strong>{item.label}</strong>
+            </button>
+          ))}
+        </nav>
+      )}
+
       <footer className="site-footer"><Brand /><p>© 2026 RentArt. Kunst für dein Jetzt.</p><div><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a><a href="mailto:hallo@rentart.de">Kontakt</a></div></footer>
     </div>
   )
