@@ -22,12 +22,14 @@ Ohne Login bleiben Startseite, Erklärung von RentArt, Ablauf und Hintergrund ö
 
 ## Persönlicher Bereich und Navigation
 
-Nach erfolgreichem Login und Google-Datenfreigabe wird der fachliche Bereich nicht mehr als eine einzige lange Ansicht dargestellt. Stattdessen gibt es große, direkt anwählbare Bereiche:
+Nach erfolgreichem Login, Google-Datenfreigabe und gültiger Rolle erhält der Nutzer eine dauerhaft sichtbare persönliche Navigation. Auf dem Handy ist sie fest am unteren Bildschirmrand verankert und bleibt auch beim Scrollen sichtbar. Sie enthält vier direkt anwählbare Bereiche:
 
-- **Kunstwerke:** vollständige Galerie mit den vorhandenen Kategorien und Reservierungsaktionen,
+- **Entdecken:** vollständige Galerie mit den vorhandenen Kategorien und Reservierungsaktionen,
 - **Favoriten:** persönlich markierte Kunstwerke,
 - **Meine Kunstwerke** für Künstler bzw. **Meine Anfragen** für Mieter,
-- **Mein Profil:** Name, E-Mail-Adresse und fachliche Rolle.
+- **Profil:** Name, E-Mail-Adresse und fachliche Rolle.
+
+Beim Antippen eines Buttons wird nur der ausgewählte persönliche Bereich angezeigt. Die Navigation selbst bleibt stehen und muss nicht durch Scrollen gesucht werden. Der aktive Bereich wird deutlich hervorgehoben. Auf größeren Bildschirmen bleibt dieselbe Navigation ebenfalls dauerhaft erreichbar.
 
 Favoriten können über ein Herz direkt am Kunstwerk gesetzt oder entfernt werden. Für den Proof of Concept werden sie pro Google-Konto lokal auf dem jeweiligen Gerät gespeichert. Sie sind damit noch keine serverseitig synchronisierte Funktion und erscheinen auf einem anderen Gerät nicht automatisch.
 
