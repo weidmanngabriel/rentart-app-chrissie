@@ -21,6 +21,10 @@ export type Artwork = {
   active: boolean
   createdAt: string
   updatedAt: string
+  dimensions: string
+  material: string
+  year: string
+  location: string
 }
 
 export type Reservation = {
@@ -46,6 +50,10 @@ export type ArtworkInput = {
   description: string
   priceMonthly: string
   category: string
+  dimensions: string
+  material: string
+  year: string
+  location: string
 }
 
 const SPREADSHEET_ID = '12F0kf0pVO-DcOIwoVbR49SgdJGr-DSZl0CdU-jVVwpI'
@@ -124,7 +132,7 @@ function rowsFromRange(valueRanges: Array<{ range?: string; values?: unknown[][]
 export async function loadDatabase(accessToken: string): Promise<DatabaseSnapshot> {
   const params = new URLSearchParams()
   params.append('ranges', 'Users!A2:D1000')
-  params.append('ranges', 'Artworks!A2:J1000')
+  params.append('ranges', 'Artworks!A2:N1000')
   params.append('ranges', 'Reservations!A2:H1000')
   params.set('valueRenderOption', 'UNFORMATTED_VALUE')
 
@@ -154,6 +162,10 @@ export async function loadDatabase(accessToken: string): Promise<DatabaseSnapsho
       active: bool(row[7]),
       createdAt: text(row[8]),
       updatedAt: text(row[9]),
+      dimensions: text(row[10]),
+      material: text(row[11]),
+      year: text(row[12]),
+      location: text(row[13]),
     }))
     .filter((artwork) => artwork.id)
 
@@ -205,7 +217,7 @@ export async function createArtwork(
   imageFileId: string,
 ) {
   const now = new Date().toISOString()
-  await appendValues(accessToken, 'Artworks!A:J', [
+  await appendValues(accessToken, 'Artworks!A:N', [
     `art-${crypto.randomUUID()}`,
     input.title,
     input.description,
@@ -216,6 +228,10 @@ export async function createArtwork(
     true,
     now,
     now,
+    input.dimensions,
+    input.material,
+    input.year,
+    input.location,
   ])
 }
 
@@ -225,7 +241,7 @@ export async function updateArtwork(
   input: ArtworkInput,
   imageFileId: string,
 ) {
-  await updateValues(accessToken, `Artworks!A${artwork.rowNumber}:J${artwork.rowNumber}`, [
+  await updateValues(accessToken, `Artworks!A${artwork.rowNumber}:N${artwork.rowNumber}`, [
     artwork.id,
     input.title,
     input.description,
@@ -236,6 +252,10 @@ export async function updateArtwork(
     true,
     artwork.createdAt,
     new Date().toISOString(),
+    input.dimensions,
+    input.material,
+    input.year,
+    input.location,
   ])
 }
 
