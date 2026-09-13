@@ -34,6 +34,10 @@ const EMPTY_DRAFT: Draft = {
   description: '',
   priceMonthly: '',
   category: 'Abstrakt',
+  dimensions: '',
+  material: '',
+  year: '',
+  location: '',
   image: null,
 }
 
@@ -48,7 +52,6 @@ function DriveImage({ accessToken, artwork }: { accessToken: string; artwork: Ar
     let cancelled = false
     let currentUrl: string | null = null
     setImageUrl(null)
-
     if (!artwork.imageFileId) return
 
     loadDriveImageUrl(accessToken, artwork.imageFileId)
@@ -71,9 +74,7 @@ function DriveImage({ accessToken, artwork }: { accessToken: string; artwork: Ar
   return imageUrl ? (
     <img className="backend-artwork-image" src={imageUrl} alt={artwork.title} />
   ) : (
-    <div className="backend-artwork-placeholder" aria-label={`Kein Bild für ${artwork.title}`}>
-      <span>RENTART</span>
-    </div>
+    <div className="backend-artwork-placeholder" aria-label={`Kein Bild für ${artwork.title}`}><span>RENTART</span></div>
   )
 }
 
@@ -91,6 +92,15 @@ function favoriteStorageKey(email: string) {
   return `rentart:favorites:${email.toLowerCase()}`
 }
 
+function artworkFacts(artwork: Artwork) {
+  return [
+    artwork.dimensions && `Maße: ${artwork.dimensions}`,
+    artwork.material && `Technik/Material: ${artwork.material}`,
+    artwork.year && `Jahr: ${artwork.year}`,
+    artwork.location && `Standort: ${artwork.location}`,
+  ].filter(Boolean) as string[]
+}
+
 export default function Gallery({ accessToken, currentUser, database, area, onAreaChange, onRefresh, onAccessExpired }: GalleryProps) {
   const [category, setCategory] = useState('Alle Werke')
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null)
@@ -106,9 +116,7 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
     const values = Array.from(new Set(activeArtworks.map((artwork) => artwork.category).filter(Boolean)))
     return ['Alle Werke', ...values]
   }, [activeArtworks])
-  const visibleArtworks = category === 'Alle Werke'
-    ? activeArtworks
-    : activeArtworks.filter((artwork) => artwork.category === category)
+  const visibleArtworks = category === 'Alle Werke' ? activeArtworks : activeArtworks.filter((artwork) => artwork.category === category)
 
   useEffect(() => {
     try {
@@ -128,9 +136,10 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
     return map
   }, [database.reservations])
 
-  const artistNameByEmail = useMemo(() => {
-    return new Map(database.users.map((user) => [user.email, user.displayName || user.email]))
-  }, [database.users])
+  const artistNameByEmail = useMemo(
+    () => new Map(database.users.map((user) => [user.email, user.displayName || user.email])),
+    [database.users],
+  )
 
   const favoriteArtworks = useMemo(
     () => activeArtworks.filter((artwork) => favoriteIds.includes(artwork.id)),
@@ -188,6 +197,10 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
       description: artwork.description,
       priceMonthly: artwork.priceMonthly,
       category: artwork.category || 'Abstrakt',
+      dimensions: artwork.dimensions,
+      material: artwork.material,
+      year: artwork.year,
+      location: artwork.location,
       image: null,
     })
     setFormOpen(true)
@@ -220,14 +233,16 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
           description: draft.description.trim(),
           priceMonthly: draft.priceMonthly.trim().replace(',', '.'),
           category: draft.category.trim(),
+          dimensions: draft.dimensions.trim(),
+          material: draft.material.trim(),
+          year: draft.year.trim(),
+          location: draft.location.trim(),
         }
 
         if (editingArtwork) {
           const imageFileId = uploadedImageId || editingArtwork.imageFileId
           await updateArtwork(accessToken, editingArtwork, input, imageFileId)
-          if (uploadedImageId && editingArtwork.imageFileId) {
-            deleteDriveFile(accessToken, editingArtwork.imageFileId).catch(() => undefined)
-          }
+          if (uploadedImageId && editingArtwork.imageFileId) deleteDriveFile(accessToken, editingArtwork.imageFileId).catch(() => undefined)
         } else {
           await createArtwork(accessToken, currentUser.email, input, uploadedImageId || '')
         }
@@ -244,47 +259,34 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
   const deleteArtwork = async (artwork: Artwork) => {
     if (!window.confirm(`„${artwork.title}“ wirklich löschen?`)) return
     await runAction(`delete-${artwork.id}`, async () => {
-      const openReservations = database.reservations.filter(
-        (reservation) => reservation.artworkId === artwork.id && isOpenReservation(reservation),
-      )
-      for (const reservation of openReservations) {
-        await setReservationStatus(accessToken, reservation, 'cancelled')
-      }
+      const openReservations = database.reservations.filter((reservation) => reservation.artworkId === artwork.id && isOpenReservation(reservation))
+      for (const reservation of openReservations) await setReservationStatus(accessToken, reservation, 'cancelled')
       await deleteArtworkRow(accessToken, artwork)
       if (artwork.imageFileId) deleteDriveFile(accessToken, artwork.imageFileId).catch(() => undefined)
     })
   }
 
-  const requestArtwork = (artwork: Artwork) => runAction(`request-${artwork.id}`, () =>
-    createReservation(accessToken, artwork.id, currentUser.email),
-  )
-
-  const changeReservation = (reservation: Reservation, status: 'active' | 'cancelled' | 'returned') =>
-    runAction(`${status}-${reservation.id}`, () => setReservationStatus(accessToken, reservation, status))
+  const requestArtwork = (artwork: Artwork) => runAction(`request-${artwork.id}`, () => createReservation(accessToken, artwork.id, currentUser.email))
+  const changeReservation = (reservation: Reservation, status: 'active' | 'cancelled' | 'returned') => runAction(`${status}-${reservation.id}`, () => setReservationStatus(accessToken, reservation, status))
 
   const renderArtworkCard = (artwork: Artwork) => {
     const reservation = openReservationByArtwork.get(artwork.id)
     const ownReservation = reservation?.customerEmail === currentUser.email
     const favorite = favoriteIds.includes(artwork.id)
+    const facts = artworkFacts(artwork)
 
     return (
       <article className="work-card backend-work-card" key={artwork.id}>
         <div className="backend-work-image">
           <DriveImage accessToken={accessToken} artwork={artwork} />
-          <button
-            className={`favorite-button ${favorite ? 'is-favorite' : ''}`}
-            onClick={() => toggleFavorite(artwork.id)}
-            aria-label={favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
-            title={favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
-          >
-            {favorite ? '♥' : '♡'}
-          </button>
+          <button className={`favorite-button ${favorite ? 'is-favorite' : ''}`} onClick={() => toggleFavorite(artwork.id)} aria-label={favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'} title={favorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}>{favorite ? '♥' : '♡'}</button>
         </div>
         <div className="work-meta backend-work-meta">
           <div>
             <span className="artwork-status">{reservation?.status === 'requested' ? 'Angefragt' : reservation?.status === 'active' ? 'Reserviert' : 'Verfügbar'}</span>
             <h3>{artwork.title}</h3>
             <p>{artistNameByEmail.get(artwork.artistEmail) || artwork.artistEmail} · {artwork.category}</p>
+            {facts.length > 0 && <p className="artwork-description">{facts.join(' · ')}</p>}
             {artwork.description && <p className="artwork-description">{artwork.description}</p>}
           </div>
           <strong>{formatPrice(artwork.priceMonthly)}<small>/ Monat</small></strong>
@@ -292,12 +294,8 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
 
         {isArtist ? (
           <div className="artwork-actions artist-actions">
-            {reservation?.status === 'requested' && (
-              <div className="reservation-note"><strong>Anfrage</strong><span>{reservation.customerEmail}</span></div>
-            )}
-            {reservation?.status === 'active' && (
-              <div className="reservation-note"><strong>Reserviert für</strong><span>{reservation.customerEmail}</span></div>
-            )}
+            {reservation?.status === 'requested' && <div className="reservation-note"><strong>Anfrage</strong><span>{reservation.customerEmail}</span></div>}
+            {reservation?.status === 'active' && <div className="reservation-note"><strong>Reserviert für</strong><span>{reservation.customerEmail}</span></div>}
             <div className="action-row">
               {reservation?.status === 'requested' && <><button onClick={() => changeReservation(reservation, 'active')} disabled={!!busy}>Annehmen</button><button onClick={() => changeReservation(reservation, 'cancelled')} disabled={!!busy}>Ablehnen</button></>}
               {reservation?.status === 'active' && <button onClick={() => changeReservation(reservation, 'returned')} disabled={!!busy}>Rückgabe bestätigen</button>}
@@ -329,10 +327,7 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
   return (
     <>
       <div className="section-heading backend-gallery-heading">
-        <div>
-          <p className="eyebrow">Dein RentArt Bereich</p>
-          <h2>{sectionTitle}</h2>
-        </div>
+        <div><p className="eyebrow">Dein RentArt Bereich</p><h2>{sectionTitle}</h2></div>
         {area === 'mine' && isArtist && <button className="button button-primary compact" onClick={openCreate}>+ Werk hinzufügen</button>}
       </div>
 
@@ -344,13 +339,17 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
             <div><p className="eyebrow">Künstlerbereich</p><h3>{editingArtwork ? 'Werk bearbeiten' : 'Neues Werk'}</h3></div>
             <button type="button" className="text-link" onClick={closeForm}>Schließen ×</button>
           </div>
-          <label>Titel<input value={draft.title} onChange={(event: { target: HTMLInputElement }) => setDraft({ ...draft, title: event.target.value })} required /></label>
-          <label>Beschreibung<textarea value={draft.description} onChange={(event: { target: HTMLTextAreaElement }) => setDraft({ ...draft, description: event.target.value })} rows={3} /></label>
+          <label>Titel<input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} required /></label>
+          <label>Beschreibung<textarea value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} rows={3} /></label>
           <div className="artwork-form-grid">
-            <label>Preis / Monat<input type="number" min="0" step="0.01" value={draft.priceMonthly} onChange={(event: { target: HTMLInputElement }) => setDraft({ ...draft, priceMonthly: event.target.value })} required /></label>
-            <label>Kategorie<select value={draft.category} onChange={(event: { target: HTMLSelectElement }) => setDraft({ ...draft, category: event.target.value })}><option>Abstrakt</option><option>Fotografie</option><option>Grafik</option><option>Malerei</option></select></label>
+            <label>Preis / Monat<input type="number" min="0" step="0.01" value={draft.priceMonthly} onChange={(event) => setDraft({ ...draft, priceMonthly: event.target.value })} required /></label>
+            <label>Kategorie<select value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}><option>Abstrakt</option><option>Fotografie</option><option>Grafik</option><option>Malerei</option><option>Skulptur</option><option>Mixed Media</option></select></label>
+            <label>Maße<input value={draft.dimensions} onChange={(event) => setDraft({ ...draft, dimensions: event.target.value })} placeholder="z. B. 80 × 120 cm" /></label>
+            <label>Technik / Material<input value={draft.material} onChange={(event) => setDraft({ ...draft, material: event.target.value })} placeholder="z. B. Acryl auf Leinwand" /></label>
+            <label>Entstehungsjahr<input type="number" min="1000" max="2100" value={draft.year} onChange={(event) => setDraft({ ...draft, year: event.target.value })} placeholder="z. B. 2025" /></label>
+            <label>Standort<input value={draft.location} onChange={(event) => setDraft({ ...draft, location: event.target.value })} placeholder="z. B. München" /></label>
           </div>
-          <label>Bild {editingArtwork && <small>(leer lassen, um das bestehende Bild zu behalten)</small>}<input type="file" accept="image/*" onChange={(event: { target: HTMLInputElement }) => setDraft({ ...draft, image: event.target.files?.[0] ?? null })} /></label>
+          <label>Bild {editingArtwork && <small>(leer lassen, um das bestehende Bild zu behalten)</small>}<input type="file" accept="image/*" onChange={(event) => setDraft({ ...draft, image: event.target.files?.[0] ?? null })} /></label>
           <button className="button button-dark" disabled={busy === 'save-artwork'}>{busy === 'save-artwork' ? 'Speichert …' : 'Werk speichern'}</button>
         </form>
       )}
@@ -358,42 +357,25 @@ export default function Gallery({ accessToken, currentUser, database, area, onAr
       {area === 'profile' && (
         <div className="profile-panel">
           <div className="profile-avatar" aria-hidden="true">{(currentUser.displayName || currentUser.email).charAt(0).toUpperCase()}</div>
-          <div>
-            <span className={`role-badge ${isArtist ? 'artist' : 'customer'}`}>{roleLabel(currentUser.role)}</span>
-            <h3>{currentUser.displayName || currentUser.email}</h3>
-            <p>{currentUser.email}</p>
-            <small>Profilinformationen kommen aktuell aus deinem Google-Konto und dem RentArt-Users-Sheet.</small>
-          </div>
+          <div><span className={`role-badge ${isArtist ? 'artist' : 'customer'}`}>{roleLabel(currentUser.role)}</span><h3>{currentUser.displayName || currentUser.email}</h3><p>{currentUser.email}</p><small>Profilinformationen kommen aktuell aus deinem Google-Konto und dem RentArt-Users-Sheet.</small></div>
         </div>
       )}
 
       {area === 'gallery' && (
         <>
-          {categories.length > 1 && (
-            <div className="filter-row" role="group" aria-label="Kollektion filtern">
-              {categories.map((item) => <button key={item} className={`filter ${category === item ? 'active' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}
-            </div>
-          )}
-          {visibleArtworks.length === 0 ? (
-            <div className="backend-empty"><p className="eyebrow">Galerie</p><h3>Noch keine Werke vorhanden.</h3><p>Sobald Werke eingestellt sind, erscheinen sie hier.</p></div>
-          ) : <div className="art-grid backend-art-grid">{visibleArtworks.map(renderArtworkCard)}</div>}
+          {categories.length > 1 && <div className="filter-row" role="group" aria-label="Kollektion filtern">{categories.map((item) => <button key={item} className={`filter ${category === item ? 'active' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}</div>}
+          {visibleArtworks.length === 0 ? <div className="backend-empty"><p className="eyebrow">Galerie</p><h3>Noch keine Werke vorhanden.</h3><p>Sobald Werke eingestellt sind, erscheinen sie hier.</p></div> : <div className="art-grid backend-art-grid">{visibleArtworks.map(renderArtworkCard)}</div>}
         </>
       )}
 
       {area === 'favorites' && (
-        favoriteArtworks.length === 0 ? (
-          <div className="backend-empty"><p className="eyebrow">Favoriten</p><h3>Noch keine Favoriten.</h3><p>Tippe bei einem Kunstwerk auf das Herz. Deine Auswahl wird auf diesem Gerät gespeichert.</p><button className="button button-primary" onClick={() => onAreaChange('gallery')}>Kunstwerke entdecken</button></div>
-        ) : <div className="art-grid backend-art-grid">{favoriteArtworks.map(renderArtworkCard)}</div>
+        favoriteArtworks.length === 0 ? <div className="backend-empty"><p className="eyebrow">Favoriten</p><h3>Noch keine Favoriten.</h3><p>Tippe bei einem Kunstwerk auf das Herz. Deine Auswahl wird auf diesem Gerät gespeichert.</p><button className="button button-primary" onClick={() => onAreaChange('gallery')}>Kunstwerke entdecken</button></div> : <div className="art-grid backend-art-grid">{favoriteArtworks.map(renderArtworkCard)}</div>
       )}
 
       {area === 'mine' && (
         isArtist ? (
-          ownArtworks.length === 0 ? (
-            <div className="backend-empty"><p className="eyebrow">Meine Kunstwerke</p><h3>Noch keine eigenen Werke.</h3><p>Lege dein erstes Werk an. Bild und Daten werden direkt in Google Drive und Google Sheets gespeichert.</p><button className="button button-primary" onClick={openCreate}>Erstes Werk hinzufügen</button></div>
-          ) : <div className="art-grid backend-art-grid">{ownArtworks.map(renderArtworkCard)}</div>
-        ) : ownReservedArtworks.length === 0 ? (
-          <div className="backend-empty"><p className="eyebrow">Meine Anfragen</p><h3>Keine offenen Anfragen.</h3><p>Deine offenen oder angenommenen Reservierungen erscheinen hier.</p><button className="button button-primary" onClick={() => onAreaChange('gallery')}>Kunstwerke entdecken</button></div>
-        ) : <div className="art-grid backend-art-grid">{ownReservedArtworks.map(renderArtworkCard)}</div>
+          ownArtworks.length === 0 ? <div className="backend-empty"><p className="eyebrow">Meine Kunstwerke</p><h3>Noch keine eigenen Werke.</h3><p>Lege dein erstes Werk an. Bild und Daten werden direkt in Google Drive und Google Sheets gespeichert.</p><button className="button button-primary" onClick={openCreate}>Erstes Werk hinzufügen</button></div> : <div className="art-grid backend-art-grid">{ownArtworks.map(renderArtworkCard)}</div>
+        ) : ownReservedArtworks.length === 0 ? <div className="backend-empty"><p className="eyebrow">Meine Anfragen</p><h3>Keine offenen Anfragen.</h3><p>Deine offenen oder angenommenen Reservierungen erscheinen hier.</p><button className="button button-primary" onClick={() => onAreaChange('gallery')}>Kunstwerke entdecken</button></div> : <div className="art-grid backend-art-grid">{ownReservedArtworks.map(renderArtworkCard)}</div>
       )}
     </>
   )
