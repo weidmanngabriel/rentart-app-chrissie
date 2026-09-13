@@ -84,16 +84,15 @@ function App() {
         callback: ({ credential }) => {
           const nextUser = storeGoogleAccount(credential)
           if (!nextUser) return
-          const nextAccounts = readStoredGoogleAccounts()
-          setAccounts(nextAccounts)
+          setAccounts(readStoredGoogleAccounts())
           setUser(nextUser)
           setArea('gallery')
+          setPage('home')
+          window.location.hash = 'top'
           setAccessToken(null)
           setDatabase(null)
           setDataError(null)
-          window.setTimeout(() => {
-            document.querySelector('#entdecken')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }, 0)
+          window.scrollTo({ top: 0 })
         },
       })
 
@@ -124,8 +123,7 @@ function App() {
     setDataLoading(true)
     setDataError(null)
     try {
-      const snapshot = await loadDatabase(accessToken)
-      setDatabase(snapshot)
+      setDatabase(await loadDatabase(accessToken))
     } catch (error) {
       if (error instanceof GoogleApiError && error.status === 401) {
         if (user) clearGoogleAccessSession(user.email)
@@ -141,8 +139,7 @@ function App() {
   }
 
   useEffect(() => {
-    if (!accessToken) return
-    void refreshDatabase()
+    if (accessToken) void refreshDatabase()
   }, [accessToken])
 
   const backendUser = useMemo(() => {
@@ -153,27 +150,21 @@ function App() {
   }, [database, user])
 
   const scrollTo = (id: string) => {
-    const scroll = () => document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
     if (page === 'documents') {
       window.location.hash = 'top'
       setPage('home')
-      window.setTimeout(scroll, 0)
+      window.setTimeout(() => document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' }), 0)
     } else {
-      scroll()
+      document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
     }
     setMenuOpen(false)
   }
 
   const openArea = (nextArea: AppArea) => {
     setArea(nextArea)
-    const open = () => document.querySelector('#entdecken')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    if (page === 'documents') {
-      window.location.hash = 'top'
-      setPage('home')
-      window.setTimeout(open, 0)
-    } else {
-      open()
-    }
+    setPage('home')
+    window.location.hash = 'top'
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     setMenuOpen(false)
   }
 
@@ -191,9 +182,7 @@ function App() {
     try {
       const { accessToken: token, expiresInSeconds } = await requestGoogleAccessToken(GOOGLE_CLIENT_ID, user.email)
       const identity = await readGoogleAccessIdentity(token)
-      if (identity.email !== user.email.toLowerCase()) {
-        throw new Error(`Bitte wähle für den Datenzugriff dasselbe Google-Konto (${user.email}).`)
-      }
+      if (identity.email !== user.email.toLowerCase()) throw new Error(`Bitte wähle für den Datenzugriff dasselbe Google-Konto (${user.email}).`)
       storeGoogleAccessSession(token, identity.email, expiresInSeconds)
       setAccessToken(token)
     } catch (error) {
@@ -208,6 +197,8 @@ function App() {
     setActiveGoogleAccount(nextUser.email)
     setUser(nextUser)
     setArea('gallery')
+    setPage('home')
+    window.location.hash = 'top'
     setAccessToken(null)
     setDatabase(null)
     setDataError(null)
@@ -219,44 +210,35 @@ function App() {
     const { accounts: nextAccounts, active } = removeGoogleAccount(user.email)
     setAccounts(nextAccounts)
     setArea('gallery')
+    setPage('home')
+    window.location.hash = 'top'
     setAccessToken(null)
     setDatabase(null)
     setDataError(null)
     setUser(active)
+    window.scrollTo({ top: 0 })
     if (!active) {
       window.google?.accounts.id.disableAutoSelect()
       setGoogleReady(false)
     }
   }
 
-  const renderGallery = () => {
-    if (!user) {
-      return (
-        <div className="login-gate">
-          <div className="login-gate-art" aria-hidden="true"><span>PRIVATE<br /><em>COLLECTION</em></span><small>RENTART / ACCESS</small></div>
-          <div className="login-gate-copy">
-            <p className="eyebrow">Galerie</p>
-            <h2>Deine Auswahl.<br /><em>Nur einen Login entfernt.</em></h2>
-            <p>Die Galerie ist nur für angemeldete Nutzer sichtbar. Melde dich oben im Header mit deinem Google-Konto an.</p>
-            <small className="privacy-note">Die Anmeldung läuft direkt über Google. RentArt speichert kein Passwort.</small>
-          </div>
-        </div>
-      )
-    }
+  const renderAppContent = () => {
+    if (!user) return null
 
     if (!accessToken) {
       return (
         <div className="data-access-gate">
-          <p className="eyebrow">Google Backend</p>
+          <p className="eyebrow">RentArt App</p>
           <h3>Datenzugriff aktivieren</h3>
-          <p>Google verlangt für den Zugriff auf Sheets und Drive einen zweiten, ausdrücklich ausgelösten Schritt. RentArt bringt dich nach dem Login direkt hierher, damit du die Freigabe ohne Suchen starten kannst.</p>
+          <p>Für Galerie, Anfragen und deine persönlichen Bereiche braucht RentArt Zugriff auf die freigegebenen Google-Daten.</p>
           {dataError && <div className="data-message error" role="alert">{dataError}</div>}
           <button className="button button-primary" onClick={activateDataAccess} disabled={authorizing}>{authorizing ? 'Google wird geöffnet …' : 'Google-Daten freigeben'}</button>
         </div>
       )
     }
 
-    if (dataLoading && !database) return <div className="data-message info">Galerie wird aus Google Sheets geladen …</div>
+    if (dataLoading && !database) return <div className="data-message info">RentArt wird geladen …</div>
     if (dataError && !database) return <div className="data-message error" role="alert">{dataError}</div>
     if (!database) return null
 
@@ -295,18 +277,21 @@ function App() {
     { id: 'profile', label: 'Profil' },
   ]
 
-  const showAreaNav = Boolean(user && accessToken && backendUser?.active && backendUser.role)
+  const showAreaNav = Boolean(user && accessToken && backendUser?.active && backendUser.role && page === 'home')
+  const showLanding = !user && page === 'home'
+  const showApp = Boolean(user && page === 'home')
 
   return (
     <div id="top" className={showAreaNav ? 'has-app-area-nav' : ''}>
       <header className="site-header">
         <Brand />
-        <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Hauptnavigation">
-          <button onClick={() => scrollTo('#entdecken')}>Galerie</button>
-          <button onClick={() => scrollTo('#so-funktionierts')}>So funktioniert's</button>
-          <button onClick={() => scrollTo('#story')}>Unsere Idee</button>
-          <button onClick={openDocuments}>Dokumente</button>
-        </nav>
+        {!user && (
+          <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Hauptnavigation">
+            <button onClick={() => scrollTo('#so-funktionierts')}>So funktioniert's</button>
+            <button onClick={() => scrollTo('#story')}>Unsere Idee</button>
+            <button onClick={openDocuments}>Dokumente</button>
+          </nav>
+        )}
         <div className="header-auth">
           {user ? (
             <details className="account-menu">
@@ -316,64 +301,39 @@ function App() {
                 <span className="account-chevron" aria-hidden="true">⌄</span>
               </summary>
               <div className="account-popover">
-                <div className="account-popover-user">
-                  <strong>{user.name}</strong>
-                  <small>{user.email}</small>
-                  {backendUser?.active && backendUser.role && <small>{backendUser.role === 'artist' ? 'Künstler' : 'Mieter'}</small>}
-                </div>
+                <div className="account-popover-user"><strong>{user.name}</strong><small>{user.email}</small>{backendUser?.active && backendUser.role && <small>{backendUser.role === 'artist' ? 'Künstler' : 'Mieter'}</small>}</div>
                 {accounts.length > 1 && (
                   <div className="account-switcher" aria-label="Gespeicherte Google-Konten">
                     <small className="account-section-label">Konto wechseln</small>
                     {accounts.map((account) => {
                       const active = account.email.toLowerCase() === user.email.toLowerCase()
-                      return (
-                        <button className={`account-option ${active ? 'is-active' : ''}`} key={account.sub} onClick={() => switchAccount(account)} disabled={active}>
-                          {account.picture ? <img src={account.picture} alt="" referrerPolicy="no-referrer" /> : <span className="account-option-initial">{account.name.charAt(0)}</span>}
-                          <span><strong>{account.name}</strong><small>{account.email}</small></span>
-                          {active && <b aria-label="Aktiv">✓</b>}
-                        </button>
-                      )
+                      return <button className={`account-option ${active ? 'is-active' : ''}`} key={account.sub} onClick={() => switchAccount(account)} disabled={active}>{account.picture ? <img src={account.picture} alt="" referrerPolicy="no-referrer" /> : <span className="account-option-initial">{account.name.charAt(0)}</span>}<span><strong>{account.name}</strong><small>{account.email}</small></span>{active && <b aria-label="Aktiv">✓</b>}</button>
                     })}
                   </div>
                 )}
-                <div className="account-add">
-                  <small className="account-section-label">Weiteres Konto hinzufügen</small>
-                  <div className="google-button account-add-google" ref={addGoogleButtonRef} aria-label="Weiteres Google-Konto hinzufügen" />
-                  {!googleReady && <span className="account-add-loading">Google wird geladen …</span>}
-                </div>
+                <div className="account-add"><small className="account-section-label">Weiteres Konto hinzufügen</small><div className="google-button account-add-google" ref={addGoogleButtonRef} aria-label="Weiteres Google-Konto hinzufügen" />{!googleReady && <span className="account-add-loading">Google wird geladen …</span>}</div>
                 <button className="logout-button" onClick={logout}>Dieses Konto abmelden</button>
               </div>
             </details>
           ) : GOOGLE_CLIENT_ID ? (
-            <div className="google-login-wrap">
-              <div className="google-button" ref={googleButtonRef} aria-label="Mit Google anmelden" />
-              {!googleReady && <span className="google-loading" aria-hidden="true" />}
-            </div>
-          ) : (
-            <span className="login-unavailable">Login nicht konfiguriert</span>
-          )}
+            <div className="google-login-wrap"><div className="google-button" ref={googleButtonRef} aria-label="Mit Google anmelden" />{!googleReady && <span className="google-loading" aria-hidden="true" />}</div>
+          ) : <span className="login-unavailable">Login nicht konfiguriert</span>}
         </div>
-        <button className="menu-toggle" aria-label="Menü öffnen" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
+        {!user && <button className="menu-toggle" aria-label="Menü öffnen" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>}
       </header>
 
       <main>
         {page === 'documents' ? (
           <DocsPage />
-        ) : (
+        ) : showLanding ? (
           <>
             <section className="hero">
               <div className="hero-copy">
                 <p className="eyebrow"><span className="eyebrow-dot" /> Kunst neu gedacht</p>
                 <h1>Räume, die<br /><em>etwas erzählen.</em></h1>
                 <p className="hero-text">Entdecke Kunst, die zu dir passt. Miete besondere Werke von lokalen Künstlern — flexibel, fair und ohne Risiko.</p>
-                <div className="hero-actions">
-                  <button className="button button-primary" onClick={() => scrollTo('#entdecken')}>{user ? 'Galerie öffnen' : 'Zur Galerie'} <span>↗</span></button>
-                  <button className="text-link" onClick={() => scrollTo('#so-funktionierts')}>Wie funktioniert's? <span>→</span></button>
-                </div>
-                <div className="hero-proof">
-                  <div className="avatar-stack" aria-hidden="true"><span>J</span><span>M</span><span>L</span><span>+</span></div>
-                  <p><strong>240+</strong> Menschen haben<br />ihre Wände neu entdeckt.</p>
-                </div>
+                <div className="hero-actions"><div className="google-button" aria-hidden="true" /><button className="text-link" onClick={() => scrollTo('#so-funktionierts')}>Wie funktioniert's? <span>→</span></button></div>
+                <p className="privacy-note">Melde dich oben mit Google an, um die RentArt-App mit Galerie, Favoriten und Anfragen zu öffnen.</p>
               </div>
               <div className="hero-art" aria-label="Abstrakte Kunstcollage">
                 <div className="art-shadow" />
@@ -386,29 +346,25 @@ function App() {
 
             <section className="marquee" aria-label="RentArt Werte"><div className="marquee-track"><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span><b>✳</b><span>BEDEUTUNGSVOLL</span><b>✳</b><span>LOKAL</span><b>✳</b><span>FLEXIBEL</span></div></section>
 
-            <section className="discover section-wrap" id="entdecken">{renderGallery()}</section>
-
             <section className="how section-wrap" id="so-funktionierts">
               <div className="how-visual"><div className="how-number">01</div><div className="how-poster"><span>MAKE<br /><em>SPACE</em><br />FOR ART</span><small>RENTART / 001</small></div><div className="scribble">easy does it <span>↗</span></div></div>
-              <div className="how-copy"><p className="eyebrow">So einfach geht's</p><h2>Kunst darf sich<br /><em>leicht anfühlen.</em></h2><div className="steps"><div className="step"><b>01</b><div><h3>Finde dein Werk</h3><p>Melde dich an und stöbere durch unsere Auswahl.</p></div></div><div className="step"><b>02</b><div><h3>Frage es an</h3><p>Schicke dem Künstler eine Reservierungsanfrage direkt aus der Galerie.</p></div></div><div className="step"><b>03</b><div><h3>Wechsel, wenn du willst</h3><p>Nach der Rückgabe wird das Werk wieder für andere verfügbar.</p></div></div></div></div>
+              <div className="how-copy"><p className="eyebrow">So einfach geht's</p><h2>Kunst darf sich<br /><em>leicht anfühlen.</em></h2><div className="steps"><div className="step"><b>01</b><div><h3>Anmelden</h3><p>Melde dich mit Google an und öffne deinen persönlichen RentArt-Bereich.</p></div></div><div className="step"><b>02</b><div><h3>Werk entdecken</h3><p>Stöbere in der Galerie und speichere interessante Werke als Favoriten.</p></div></div><div className="step"><b>03</b><div><h3>Anfragen</h3><p>Schicke dem Künstler eine Reservierungsanfrage direkt aus der App.</p></div></div></div></div>
             </section>
 
             <section className="story section-wrap" id="story"><p className="eyebrow">Warum RentArt?</p><h2>Mehr als ein Bild.<br /><em>Ein Gefühl für Räume.</em></h2><p className="story-text">Wir glauben, dass Kunst nicht hinter Glas warten sollte. Sie soll bei dir sein — im Alltag, im Wandel, genau dort, wo Leben passiert.</p><a className="text-link" href="mailto:hallo@rentart.de">Lern uns kennen <span>→</span></a></section>
           </>
-        )}
+        ) : showApp ? (
+          <section className="discover section-wrap" id="entdecken">{renderAppContent()}</section>
+        ) : null}
       </main>
 
       {showAreaNav && (
         <nav className="app-area-nav" aria-label="Persönliche Bereiche">
-          {areaItems.map((item) => (
-            <button key={item.id} className={`app-area-button ${area === item.id ? 'is-active' : ''}`} onClick={() => openArea(item.id)}>
-              <strong>{item.label}</strong>
-            </button>
-          ))}
+          {areaItems.map((item) => <button key={item.id} className={`app-area-button ${area === item.id ? 'is-active' : ''}`} onClick={() => openArea(item.id)}><strong>{item.label}</strong></button>)}
         </nav>
       )}
 
-      <footer className="site-footer"><Brand /><p>© 2026 RentArt. Kunst für dein Jetzt.</p><div><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a><a href="mailto:hallo@rentart.de">Kontakt</a></div></footer>
+      {!user && <footer className="site-footer"><Brand /><p>© 2026 RentArt. Kunst für dein Jetzt.</p><div><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a><a href="mailto:hallo@rentart.de">Kontakt</a></div></footer>}
     </div>
   )
 }
